@@ -1,47 +1,38 @@
+import urllib3
 from util_read import readfile
 
-def deal_joyokanji(source, appendix):
-    kanji_set = {}
-    previous = '*'
+#https://ja.wiktionary.org/w/api.php?action=parse&page=%E5%8F%B6&noimages=true&format=json&prop=sections
+#https://ja.wiktionary.org/w/api.php?action=parse&page=%E5%8F%B6&noimages=true&format=json&prop=wikitext&section=4
+
+class Jinmei():
+    _url = 'https://ja.wiktionary.org/w/api.php'
+    _fields = {'action': 'parse', 
+            'page': '叶', 
+            'noimages': True, 
+            'format': 'json', 
+            'prop': 'sections'}
+
+    def __init__(self):
+        self.__http = urllib3.PoolManager()
+
+    def __fectch_sections(self, kanji):
+        fields = {x: y for x, y in self._fields.values()}
+        fields['page'] = kanji
+        hdlr = self.__http.request('GET', fields=fields)
+
+    def __fectch_youmi(self, kanji, index):
+        fields = {x: y for x, y in self._fields.values()}
+        fields['page'] = kanji
+        fields['prop'] = 'wikitext'
+        fields['section'] = index
+        hdlr = self.__http.request('GET', fields=fields)
+
+
+    def fetch_section(kanji):
+        hdlr = urllib3.Pool
     
-    ji = []
-    ji_flag = True
-    yomi = {}
-    for current in source:
-        if current == '' or current == '*' and previous == '*':
-            continue
-
-        if current == '*':
-            previous = current
-            kanji_set['/'.join(ji)] = yomi
-            ji = []
-            ji_flag = True
-            yomi = {}
-            continue
-
-        ji_flag = len(current) == 1 and ji_flag
-        if ji_flag:
-            ji.append(current + appendix)
-            continue
-
-        items = [x.strip() for x in current.split('\t')]
-        if len(items) > 3:
-            print(items)
-        elif len(items) == 3 and len(ji) == 0 and len(items[0]) == 1:
-            ji.append(items[0] + appendix)
-            yomi[items[1]] = items[2]
-        elif len(items) == 3:
-            print(items)
-        elif len(items) == 2:
-            yomi[items[0]] = items[1]
-        else:
-            yomi[items[0]] = ''
-        previous = current
-
-    return kanji_set
-
-def read_jinmei():
-    return deal_joyokanji(readfile('じんめいじょうようかんじひょう'), '*')
-
+    def read_jinmei():
+        return deal_joyokanji(readfile('じんめいじょうようかんじひょう'), '*')
+    
 if __name__ == '__main__':
     jinmei = read_jinmei()
