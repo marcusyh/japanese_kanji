@@ -7,6 +7,8 @@ def deal_joyokanji(source, appendix):
     ji = []
     ji_flag = True
     yomi = {}
+
+    source.append('*')
     for current in source:
         if current == '' or current == '*' and previous == '*':
             continue
@@ -22,6 +24,7 @@ def deal_joyokanji(source, appendix):
         ji_flag = len(current) == 1 and ji_flag
         if ji_flag:
             ji.append(current + appendix)
+            previous = current
             continue
 
         items = [x.strip() for x in current.split('\t')]
