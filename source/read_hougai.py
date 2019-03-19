@@ -19,8 +19,8 @@ def deal_weblio(source, appendix):
 
     return kanji_set
 
-def read_hougai():
-    return deal_weblio(readfile('ひょうがいかんじじたいひょう'), '+')
+def read_hougai(appendix = ''):
+    return deal_weblio(readfile('ひょうがいかんじじたいひょう'), appendix)
 
 
 if __name__ == '__main__':

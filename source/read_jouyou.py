@@ -44,8 +44,8 @@ def deal_joyokanji(source, appendix):
     return kanji_set
 
 
-def read_jouyou():
-    return deal_joyokanji(readfile('じょうようかんじひょう'), '')
+def read_jouyou(appendix = ''):
+    return deal_joyokanji(readfile('じょうようかんじひょう'), appendix)
 
 if __name__ == '__main__':
     jouyou = read_jouyou()
