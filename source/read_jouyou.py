@@ -1,3 +1,4 @@
+import os
 from util_read import readfile
 
 def deal_joyokanji(source, appendix):
@@ -38,14 +39,14 @@ def deal_joyokanji(source, appendix):
         elif len(items) == 2:
             yomi[items[0]] = items[1]
         else:
-            yomi[items[0]] = ''
+            yomi[''] = items if '' not in yomi else yomi[''] + items
         previous = current
 
     return kanji_set
 
 
 def read_jouyou(appendix = ''):
-    return deal_joyokanji(readfile('じょうようかんじひょう'), appendix)
+    return deal_joyokanji(readfile('source/じょうようかんじひょう'), appendix)
 
 if __name__ == '__main__':
     jouyou = read_jouyou()

@@ -19,7 +19,7 @@ def deal_jinmei(source, appendix):
     return kanji_set
 
 def read_jinmei(appendix = ''):
-    return deal_jinmei(readfile('じんめいじょうようかんじひょう'), appendix)
+    return deal_jinmei(readfile('source/じんめいじょうようかんじひょう'), appendix)
 
 
 if __name__ == '__main__':

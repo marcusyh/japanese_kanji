@@ -3,36 +3,58 @@ from source.read_jinmei import read_jinmei
 from source.read_hougai import read_hougai
 from source.read_itai import read_itai
 
-
-def merge_kanji():
-    jouyou = read_jouyou()
-    jinmei = read_jinmei()
-    hougai = read_hougai()
-    itai = read_itai()
-
-    kanji_sets = {}
+def merge_kanji(jouyou, hougai, jinmai, itai):
+    kanji_dict = {}
     
-    for ji in youyou.keys():
+    for ji in list(jouyou.keys()) + list(jinmei.keys()) + list(hougai.keys()) + list(itai.keys()):
         items = sorted(ji.split('/'))
-        if items[0] not in kanji_sets:
-            kanji_sets[items[0]] = {}
-        kanji_sets[items[0]] = 
-        
-from classify_data import get_classified
-from classify_data import add_alter
-from save_file import save_to_docx
-from save_file import save_to_csv
+        print(ji)
+        if len(items) < 1:
+            continue
+        for item in items:
+            if item in kanji_dict:
+                break 
+        kanji_dict[items[0]] = set.union(kanji_dict.get(item, set()), set(items))
+        if items.index(item) != 0 and item in kanji_dict:
+            del kanji_dict[item]
 
+    return kanji_dict
 
-FILENAME = '常用汉字列表音読み'
-FILEPATH = '/mnt/c/Users/cj/Desktop'
+def merge_kanji_with_tag(jouyou, hougai, jinmei, itai):
+    kanji_dict = {}
+    tmp_dict= {}
 
+    def merge_to_sets(source, appendix):
+        for ji in source.keys():
+            if ji.strip().strip('/') == 0:
+                continue
 
-if __name__ == '__main__':
-    hira, kata = get_classified(jouyou, jinmei, hougai)
-    kata, remains = add_alter(kata)
+            sorted(ji.split('/'))
+            inside = [item for item in items if item in temp_dict]
+            outside = list(sets(items) - sets(inside))
 
-    save_to_docx(kata, FILENAME, FILEPATH)
+            if not inside:
+                kanji_dict[items[0]] = [item + appendix for item in items]
+                tmp_dict.update({item: items[0] for item in items})
+                continue
+
+            if inside[0] == items[0]:
+                kanji_dict[items[0]].append([item + appendix for item in outside])
+                tmp_dict.update({item: items[0] for item in outside})
+                continue
+
+            kanji_dict[items[0]] = kanji_dict[inside[0]] + [item + appendix for item in outside]
+            del kanji_dict[inside[0]]
+            tmp_dict.update({item: items[0] for item in items})
+
+    merge_to_sets(jouyou, '1')
+    merge_to_sets(hougai, '2')
+    merge_to_sets(jinmei, '3')
+    merge_to_sets(igai, '4')
+
+    return kanji_dict
+
+       
 def _reorgnize(*args):
     new_kanjiset = {}
     for kanji_set in args:
@@ -69,7 +91,9 @@ def get_classified(*args):
     return _get_result(_reorgnize(*args))
 
 if __name__ == '__main__':
-    a = {'a1': {'a11': 'a111', 'a12': 'a121'}, 'a1': {'a11': 'a111', 'a12': 'a121'}}
-    b = {'b1': {'b11': 'b111', 'b12': 'b121'}, 'b1': {'b11': 'b111', 'b12': 'b121'}}
-    c = {'c1': {'c11': 'c111', 'c12': 'c121'}, 'c1': {'c11': 'c111', 'c12': 'c121'}, '': {}}
-    x, y = get_classified(a, b, c)
+    jouyou = read_jouyou()
+    hougai = read_hougai()
+    jinmei = read_jinmei()
+    itai = read_itai()
+
+    rslt = merge_kanji2(jouyou, hougai, jinmei, itai)

@@ -19,7 +19,7 @@ def deal_itai(source, appendix):
     return kanji_set
 
 def read_itai(appendix = ''):
-    return deal_itai(readfile('いたいじ'), appendix)
+    return deal_itai(readfile('source/いたいじ'), appendix)
 
 
 if __name__ == '__main__':
