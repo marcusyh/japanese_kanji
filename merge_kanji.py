@@ -3,7 +3,7 @@ from source.read_jinmei import read_jinmei
 from source.read_hougai import read_hougai
 from source.read_itai import read_itai
 
-def merge_kanji(jouyou, hougai, jinmai, itai):
+def merge_kanji_without_tag(jouyou, hougai, jinmai, itai):
     kanji_dict = {}
     
     for ji in list(jouyou.keys()) + list(jinmei.keys()) + list(hougai.keys()) + list(itai.keys()):
@@ -20,37 +20,37 @@ def merge_kanji(jouyou, hougai, jinmai, itai):
 
     return kanji_dict
 
-def merge_kanji_with_tag(jouyou, hougai, jinmei, itai):
+def merge_kanji(*args):
     kanji_dict = {}
-    tmp_dict= {}
+    temp_dict= {}
 
     def merge_to_sets(source, appendix):
         for ji in source.keys():
             if ji.strip().strip('/') == 0:
                 continue
 
-            sorted(ji.split('/'))
+            items = sorted(ji.split('/'))
             inside = [item for item in items if item in temp_dict]
-            outside = list(sets(items) - sets(inside))
+            outside = list(set(items) - set(inside))
 
             if not inside:
-                kanji_dict[items[0]] = [item + appendix for item in items]
-                tmp_dict.update({item: items[0] for item in items})
+                kanji_dict[items[0]] = [appendix + item for item in items]
+                temp_dict.update({item: items[0] for item in items})
                 continue
 
-            if inside[0] == items[0]:
-                kanji_dict[items[0]].append([item + appendix for item in outside])
-                tmp_dict.update({item: items[0] for item in outside})
+            if inside[0] == temp_dict[inside[0]]:
+                kanji_dict[items[0]] += [appendix + item for item in outside]
+                temp_dict.update({item: items[0] for item in outside})
                 continue
+            
+            items2 = sorted(kanji_dict[temp_dict[inside[0]]] + outside) 
+            kanji_dict[items2[0]] = [appendix + item for item in items2]
+            print(inside[0], kanji_dict[inside[0]])
+            del kanji_dict[temp_dict[inside[0]]]
+            temp_dict.update({item: items2[0] for item in items2})
 
-            kanji_dict[items[0]] = kanji_dict[inside[0]] + [item + appendix for item in outside]
-            del kanji_dict[inside[0]]
-            tmp_dict.update({item: items[0] for item in items})
-
-    merge_to_sets(jouyou, '1')
-    merge_to_sets(hougai, '2')
-    merge_to_sets(jinmei, '3')
-    merge_to_sets(igai, '4')
+    for source in args:
+        merge_to_sets(source, args.index(source) + 1)
 
     return kanji_dict
 
@@ -96,4 +96,4 @@ if __name__ == '__main__':
     jinmei = read_jinmei()
     itai = read_itai()
 
-    rslt = merge_kanji2(jouyou, hougai, jinmei, itai)
+    rslt = merge_kanji(jouyou, hougai, jinmei, itai)
