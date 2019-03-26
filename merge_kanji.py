@@ -39,18 +39,19 @@ def merge_kanji(*args):
                 continue
 
             if inside[0] == temp_dict[inside[0]]:
-                kanji_dict[items[0]] += [appendix + item for item in outside]
-                temp_dict.update({item: items[0] for item in outside})
+                kanji_dict[inside[0]] += [appendix + item for item in outside]
+                temp_dict.update({item: inside[0] for item in outside})
                 continue
             
             items2 = sorted(kanji_dict[temp_dict[inside[0]]] + outside) 
             kanji_dict[items2[0]] = [appendix + item for item in items2]
-            print(inside[0], kanji_dict[inside[0]])
+            print(inside[0])
+            print(kanji_dict[temp_dict[inside[0]]])
             del kanji_dict[temp_dict[inside[0]]]
             temp_dict.update({item: items2[0] for item in items2})
 
     for source in args:
-        merge_to_sets(source, args.index(source) + 1)
+        merge_to_sets(source, str(args.index(source) + 1))
 
     return kanji_dict
 
