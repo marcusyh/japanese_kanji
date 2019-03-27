@@ -21,7 +21,12 @@ def merge_kanji_without_tag(jouyou, hougai, jinmai, itai):
     return kanji_dict
 
 def merge_kanji(*args):
+    # kanji_dict used to save the respected result. 
+    # The kanji which has the smallest unicode value of the itai kanji group will be treated as the key
+    # All the kanji of the itai kanji group will be put in the value list
     kanji_dict = {}
+    # Usded as an assistant dictionary
+    # Any kanji appearred as the key, the key in kanji_dict as the value of them.
     temp_dict= {}
 
     def merge_to_sets(source, appendix):
@@ -32,23 +37,25 @@ def merge_kanji(*args):
             items = sorted(ji.split('/'))
             inside = [item for item in items if item in temp_dict]
             outside = list(set(items) - set(inside))
-
+            
+            # when inside list is empty, append all element in items list to kanji_dict with key items[0]
             if not inside:
                 kanji_dict[items[0]] = [appendix + item for item in items]
                 temp_dict.update({item: items[0] for item in items})
                 continue
-
-            if inside[0] == temp_dict[inside[0]]:
-                kanji_dict[inside[0]] += [appendix + item for item in outside]
-                temp_dict.update({item: inside[0] for item in outside})
-                continue
             
-            items2 = sorted(kanji_dict[temp_dict[inside[0]]] + outside) 
-            kanji_dict[items2[0]] = [appendix + item for item in items2]
-            print(inside[0])
-            print(kanji_dict[temp_dict[inside[0]]])
+            # when inside list is not emppty, and when items[0] is equal or bigger than the original key in kanji_dict, we still let the orignal key as the key
+            if items[0] == temp_dict[inside[0]] or sorted([items[0], temp_dict[inside[0]]])[1] == items[0]:
+                kanji_dict[temp_dict[inside[0]]] += [appendix + item for item in outside]
+                temp_dict.update({item: temp_dict[inside[0]] for item in outside})
+                continue
+           
+            # when inside list is not empty, and when items[0] is smaller than the orignal key, we replace the original key to items[0] 
+            items2 = outside + kanji_dict[temp_dict[inside[0]]]
+            kanji_dict[temp_dict[inside[0]]] = [appendix + item for item in items2]
+            kanji_dict[items[0]] = kanji_dict[temp_dict[inside[0]]]
             del kanji_dict[temp_dict[inside[0]]]
-            temp_dict.update({item: items2[0] for item in items2})
+            temp_dict.update({item: items[0] for item in items2})
 
     for source in args:
         merge_to_sets(source, str(args.index(source) + 1))
