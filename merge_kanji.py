@@ -30,7 +30,7 @@ def merge_kanji(*args):
     temp_dict= {}
 
     def merge_to_sets(source, appendix):
-        for ji, kana in source.items():
+        for ji in source.keys():
             if ji.strip().strip('/') == 0:
                 continue
 
@@ -51,11 +51,11 @@ def merge_kanji(*args):
                 continue
            
             # when inside list is not empty, and when items[0] is smaller than the orignal key, we replace the original key to items[0] 
-            key = min(outside[0], kanji_dict[temp_dict[inside[0]]][0])
+            items2 = sorted(outside + kanji_dict[temp_dict[inside[0]]])
             kanji_dict[temp_dict[inside[0]]] += [appendix + item for item in outside]
-            kanji_dict[key] = kanji_dict[temp_dict[inside[0]]]
+            kanji_dict[items[0]] = kanji_dict[temp_dict[inside[0]]]
             del kanji_dict[temp_dict[inside[0]]]
-            temp_dict.update({item: key for item in outside + kanji_dict[temp_dict[inside[0]]]})
+            temp_dict.update({item: items[0] for item in items2})
 
     for source in args:
         merge_to_sets(source, str(args.index(source) + 1))
