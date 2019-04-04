@@ -1,7 +1,9 @@
-from source.read_jouyou import read_jouyou
-from source.read_jinmei import read_jinmei
-from source.read_hougai import read_hougai
-from source.read_itai import read_itai
+import sys
+sys.path.insert(0, 'source')
+from read_jouyou import read_jouyou
+from read_jinmei import read_jinmei
+from read_hougai import read_hougai
+from read_itai import read_itai
 
 def merge_kanji_without_tag(jouyou, hougai, jinmai, itai):
     kanji_dict = {}
