@@ -22,13 +22,16 @@ def fetch_remote(source):
     wyoumi = WikiYoumi()
     wiki_dict = load_from_cache()
     count = 0
-    print(count)
+
     for kanji, v in source.items():
-        if count % 10 == 0:
+        if count % 1 == 0:
             print(count)
+
         count += 1
         if kanji in wiki_dict:
+            print(kanji, 'in cache')
             continue
+
         try:
             for key in [kanji] + [x[1] for x in v['kanji'] if x != kanji]:
                 index = wyoumi.fectch_sections(kanji)
@@ -46,8 +49,13 @@ def fetch_remote(source):
 
         except Exception:
             traceback.print_exc()
-    save_to_cache(kanji_dict)
-    return kanji_dict
+
+        if count % 200 == 0 and count != 0:
+            save_to_cache(wiki_dict)
+            print('saved to cache')
+
+    save_to_cache(wiki_dict)
+    return wiki_dict 
 
 if __name__ == '__main__':
     source = get_source()
