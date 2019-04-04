@@ -5,6 +5,8 @@ import re
 
 #https://ja.wiktionary.org/w/api.php?action=parse&page=%E5%8F%B6&noimages=true&format=json&prop=sections
 #https://ja.wiktionary.org/w/api.php?action=parse&page=%E5%8F%B6&noimages=true&format=json&prop=wikitext&section=4
+#https://github.com/5j9/wikitextparser
+#https://github.com/earwig/mwparserfromhell/
 
 class WikiYoumi():
     _url = 'https://ja.wiktionary.org/w/api.php'
