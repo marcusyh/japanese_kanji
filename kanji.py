@@ -24,12 +24,7 @@ def fetch_remote(source):
     count = 0
 
     for kanji, v in source.items():
-        if count % 1 == 0:
-            print(count)
-
-        count += 1
         if kanji in wiki_dict:
-            print(kanji, 'in cache')
             continue
 
         try:
@@ -53,6 +48,7 @@ def fetch_remote(source):
         if count % 200 == 0 and count != 0:
             save_to_cache(wiki_dict)
             print('saved to cache')
+        count += 1
 
     save_to_cache(wiki_dict)
     return wiki_dict 
