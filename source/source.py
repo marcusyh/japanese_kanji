@@ -56,7 +56,7 @@ def merge_kanji(*args):
                 continue
            
             # when inside list is not empty, and when items[0] is smaller than the orignal key, we replace the original key to items[0] 
-            items2 = sorted(outside + kanji_dict[temp_dict[inside[0]]]['kanji'])
+            items2 = sorted(outside + [item[1] for item in kanji_dict[temp_dict[inside[0]]]['kanji']])
             kanji_dict[temp_dict[inside[0]]]['kanji'] += [appendix + item for item in outside]
             kanji_dict[temp_dict[inside[0]]]['kana'].update(kana)
             kanji_dict[items[0]] = kanji_dict[temp_dict[inside[0]]]
@@ -66,7 +66,7 @@ def merge_kanji(*args):
     for source in args:
         merge_to_sets(source, str(args.index(source) + 1))
 
-    return kanji_dict
+    return kanji_dict, list(temp_dict.keys())
 
 def convert_to_writable(kanji_dict):
     writable = {}
