@@ -8,7 +8,7 @@ import re
 #https://github.com/5j9/wikitextparser
 #https://github.com/earwig/mwparserfromhell/
 
-class WikiYoumi():
+class Agent():
     _url = 'https://ja.wiktionary.org/w/api.php'
     _fields = {'action': 'parse', 
             'page': '', 
@@ -49,4 +49,4 @@ class WikiYoumi():
             traceback.print_exc()
 
 if __name__ == '__main__':
-    wiki = WikiYoumi()
+    wa = Agent()

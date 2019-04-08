@@ -1,10 +1,11 @@
 import traceback
-from source.source import get_source
-from wiki_youmi import WikiYoumi
+from wiktionary.agent import Agent
+
+CACHE = 'wiktionary/cache.txt'
 
 def load_from_cache():
     wiki_dict = {}
-    h = open('wiki_cache.txt', 'r')
+    h = open(CACHE, 'r')
     for s in h.readlines():
         items = s.strip().split('\t')
         wiki_dict[items[0]] = '\t'.join(items[1:])
@@ -12,18 +13,18 @@ def load_from_cache():
     return wiki_dict
 
 def save_to_cache(wiki_dict):
-    h = open('wiki_cache.txt', 'w')
+    h = open(CACHE, 'w')
     for k, v in wiki_dict.items():
         s= '%s\t%s\n' %(k, v.replace('\n', ' ').replace('\r', ' '))
         h.write(s)
     h.close()
 
-def fetch_remote(source):
-    wyoumi = WikiYoumi()
+def fetch_wikt(kanji_list):
+    wyoumi = Agent()
     wiki_dict = load_from_cache()
     count = 0
 
-    for kanji, v in source.items():
+    for kanji in kanji_list:
         if kanji in wiki_dict:
             continue
 
@@ -54,6 +55,7 @@ def fetch_remote(source):
     return wiki_dict 
 
 if __name__ == '__main__':
-    source = get_source()
-    wiki_dict = fetch_remote(source)
+    from source.source import get_source
+    kj_list = list(get_source().keys())
+    wiki_dict = fetch_wikt(kj_list)
 
