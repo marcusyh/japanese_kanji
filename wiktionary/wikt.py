@@ -1,13 +1,16 @@
 import traceback
+import os
 from wiktionary.agent import Agent
 
 CACHE = 'wiktionary/cache.txt'
 
 def load_from_cache():
+    if not os.path.isfile(CACHE):
+        return {}
     wiki_dict = {}
     h = open(CACHE, 'r')
     for s in h.readlines():
-        items = s.strip().split('\t')
+        items = s.strip().replace('\\n', '\n').replace('\\r', '\r').split('\t')
         wiki_dict[items[0]] = '\t'.join(items[1:])
     h.close()
     return wiki_dict
@@ -15,7 +18,7 @@ def load_from_cache():
 def save_to_cache(wiki_dict):
     h = open(CACHE, 'w')
     for k, v in wiki_dict.items():
-        s= '%s\t%s\n' %(k, v.replace('\n', ' ').replace('\r', ' '))
+        s= '%s\t%s\n' %(k, v.replace('\n', '\\n').replace('\r', '\\r'))
         h.write(s)
     h.close()
 
@@ -44,6 +47,8 @@ def fetch_wikt(kanji_list):
         except Exception:
             traceback.print_exc()
 
+        if count % 20 == 0:
+            print(count)
         if count % 200 == 0 and count != 0:
             save_to_cache(wiki_dict)
             print('saved to cache')
@@ -54,6 +59,6 @@ def fetch_wikt(kanji_list):
 
 if __name__ == '__main__':
     from source.source import get_source
-    kj_list = list(get_source().keys())
+    kj_dict, kj_list = get_source()
     wiki_dict = fetch_wikt(kj_list)
 
