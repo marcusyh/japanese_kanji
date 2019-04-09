@@ -52,9 +52,11 @@ def fetch_wikt(kanji_list):
         if count % 200 == 0 and count != 0:
             save_to_cache(wiki_dict)
             print('saved to cache')
+
         count += 1
 
-    save_to_cache(wiki_dict)
+    if count % 200 > 0:
+        save_to_cache(wiki_dict)
     return wiki_dict 
 
 if __name__ == '__main__':
