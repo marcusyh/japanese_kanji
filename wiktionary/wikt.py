@@ -1,7 +1,7 @@
 import traceback
 import os
 from wiktionary.agent import Agent
-from wiktionary.sectitons import check_wikitext, fetch_wikitext
+from wiktionary.sections import check_wikitext, fetch_wikitext
 
 CACHE = 'wiktionary/cache.txt'
 
