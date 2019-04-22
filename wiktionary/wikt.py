@@ -1,6 +1,7 @@
 import traceback
 import os
 from wiktionary.agent import Agent
+from wiktionary.sectitons import check_wikitext, fetch_wikitext
 
 CACHE = 'wiktionary/cache.txt'
 
@@ -22,7 +23,7 @@ def save_to_cache(wiki_dict):
         h.write(s)
     h.close()
 
-def fetch_wikt(kanji_list, update_flag):
+def fetch_wiktdata(kanji_list, update_flag):
     wiki_dict = load_from_cache()
     if not update_flag:
         return wiki_dict
@@ -63,8 +64,18 @@ def fetch_wikt(kanji_list, update_flag):
         save_to_cache(wiki_dict)
     return wiki_dict 
 
+def get_youmi(kj_list, update_flag):
+    wiki_dict = fetch_wiktdata(kj_list, update_flag)
+    if update_flag:
+        check_wikitext(wiki_dict)
+    return fetch_wikitext(wiki_dict)
+    
 if __name__ == '__main__':
+    import sys
     from source.source import get_source
+    update_flag = False
+    if len(sys.argv) == 2 and sys.argv[1] == 'update':
+        update_flag = True
     kj_dict, kj_list = get_source()
-    wiki_dict = fetch_wikt(kj_list)
+    wiki_text = get_youmi(kj_list, update_flag)
 

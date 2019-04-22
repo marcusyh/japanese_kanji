@@ -94,9 +94,21 @@ def check_youmi(wiki_parsed):
     print("\t%s have both 音読み and 訓読み" %len(cnt_normal[3]))
     print("\t%s have only 音読み" %len(cnt_normal[2]))
     print("\t%s have only 訓読み" %len(cnt_normal[1]))
-            
-            
-def check_wikt(wiki_dict):
-    wiki_parsed = {k: wtp.parse(v) for k, v in wiki_dict.items()}
+
+
+def convert_to_parse(wiki_dict):
+    return {k: wtp.parse(v) for k, v in wiki_dict.items()}
+
+
+def fetch_wikitext(wiki_dict):
+    wiki_parsed = convert_to_parse(wiki_dict)
+    wikitext = {}
+    for k, v in wiki_parsed.items():
+        wikitext[k] = v.sections[2]
+    return wikitext
+
+
+def check_wikitext(wiki_dict):
+    wiki_parsed = convert_to_parse(wiki_dict)
     check_sections(wiki_parsed)
     check_youmi(wiki_parsed)
