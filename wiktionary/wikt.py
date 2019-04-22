@@ -22,14 +22,18 @@ def save_to_cache(wiki_dict):
         h.write(s)
     h.close()
 
-def fetch_wikt(kanji_list):
-    agent = Agent()
+def fetch_wikt(kanji_list, update_flag):
     wiki_dict = load_from_cache()
+    if not update_flag:
+        return wiki_dict
+
+    agent = Agent()
     count = 0
 
     for kanji in kanji_list:
         if kanji in wiki_dict:
             continue
+        continue
 
         try:
             index = agent.fectch_sections(kanji)
