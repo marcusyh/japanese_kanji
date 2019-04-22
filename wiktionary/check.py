@@ -95,31 +95,6 @@ def check_youmi(wiki_parsed):
     print("\t%s have only 音読み" %len(cnt_normal[2]))
     print("\t%s have only 訓読み" %len(cnt_normal[1]))
             
-    #suma = {3: {}, 2:{}, 1: {}, 0: {}}
-    #
-    #for k1, v1 in counts.items():
-    #    for k2, v2 in v1.items():
-    #        for k3 in v2:
-    #            if k3 not in suma[k2]:
-    #                suma[k2][k3] = []
-    #            suma[k2][k3].append(k1)
-    #
-    #suma.keys()
-    #for a, b in suma.items():
-    #    print(a, len(b))
-    #    for x, y in b.items():
-    #        print(a, x, len(y))
-    #        
-    #    
-    #for a, b in suma.items():
-    #    for x, y in b.items():
-    #        if a == 0 or x == 2:
-    #            continue
-
-    #        print(a, x, len(y))
-    #        for i in y:
-    #            ps(wiki_parsed[i])
-    #                    
             
 def check_wikt(wiki_dict):
     wiki_parsed = {k: wtp.parse(v) for k, v in wiki_dict.items()}
