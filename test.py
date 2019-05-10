@@ -10,8 +10,14 @@ if __name__ == '__main__':
     kj_dict, kj_list = get_source()
     wiki_text = get_youmi(kj_list, update_flag)
 
-
+    def get_star_number(string): 
+        count = 0
+        while string.startswith('*'):
+            string = string[1:]
+            count += 1
+        return count
     
+    ydict = {}
     import re
     h1 = open('/tmp/youmi.txt', 'w')
     h2 = open('/tmp/youmi2.txt', 'w')
@@ -32,6 +38,20 @@ if __name__ == '__main__':
         z = k + '\t' + '\t'.join([str(y[k]) for k in sorted(y)]) + '\n'
         h1.write('%s\t%s\n' %(k, y['name1']))
         h2.write(z)
+        youmi = y['name1'].split('\n')
+        ydict[k] = {}
+        for i in youmi:
+            line = i.strip()
+            if not line:
+                continue
+            if not line.startswith('*'):
+                print(k, y['name1'], line)
+            while string.startswith('*'):
+                string = string[1:]
+                ydict[k][
+            ydict[k][line] = {}
+        x = re.match( \
+                , youmi)
         #if y['name5'] and y['name5'].find('*') >= 0:
         #    z = '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' %(k, y['name0'], y['name1'], y['name2'], y['name3'], y['name4'], y['name5'])
         #    print(z)
