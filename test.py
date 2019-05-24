@@ -38,20 +38,45 @@ if __name__ == '__main__':
         z = k + '\t' + '\t'.join([str(y[k]) for k in sorted(y)]) + '\n'
         h1.write('%s\t%s\n' %(k, y['name1']))
         h2.write(z)
-        youmi = y['name1'].split('\n')
-        ydict[k] = {}
-        for i in youmi:
-            line = i.strip()
-            if not line:
-                continue
-            if not line.startswith('*'):
-                print(k, y['name1'], line)
-            while string.startswith('*'):
-                string = string[1:]
-                ydict[k][
-            ydict[k][line] = {}
-        x = re.match( \
+
+        youmi = y['name1'].replace('\\n', '')
+        x = re.match(\
+                '[^*]*'\
+                '\* *(?P<name0>[^*]{1,})'\
+                '(\*\* *(?P<name1>[^*]{1,}))'\
+                '(\*\* *(?P<name2>[^*]{1,}))?'\
+                '(\*\* *(?P<name3>[^*]{1,}))?'\
+                '\* *(?P<name5>[^*]{1,})\*? *: *(?P<name6>[^*]{1,})$'\
                 , youmi)
+        ydict[k] = {}
+        if x:
+            y = x.groupdict()
+            z = k + '\t' + '\t'.join([str(y[k]) for k in sorted(y)]) + '\n'
+            continue
+            print(k, youmi)
+            print(z)
+
+        x = re.match(\
+                '[^*]*'\
+                '\* *(?P<name0>[^*]{1,})'\
+                '(\*\* *(?P<name1>[^*]{1,}))'\
+                '(\*\* *(?P<name2>[^*]{1,}))?'\
+                '(\*\* *(?P<name3>[^*]{1,}))?'\
+                '\* *(?P<name4>[^*]{1,})'\
+                '(\*\* *(?P<name5>[^*]{1,})(\*\*)? *: *(?P<name6>[^*]{1,}))'\
+                '(\*\* *(?P<name7>[^*]{1,})(\*\*)? *: *(?P<name8>[^*]{1,}))?$'\
+                , youmi)
+        ydict[k] = {}
+        if x:
+            y = x.groupdict()
+            z = k + '\t' + '\t'.join([str(y[k]) for k in sorted(y)]) + '\n'
+            continue
+            print(k, youmi)
+            print(z)
+
+        print(k, youmi)
+
+
         #if y['name5'] and y['name5'].find('*') >= 0:
         #    z = '%s\t%s\t%s\t%s\t%s\t%s\t%s\n' %(k, y['name0'], y['name1'], y['name2'], y['name3'], y['name4'], y['name5'])
         #    print(z)
