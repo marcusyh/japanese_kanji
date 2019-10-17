@@ -11,14 +11,12 @@ def merge_kanji():
     hougai = read_hougai()
     itai = read_itai()
 
-from classify_data import get_classified
-from classify_data import add_alter
-from save_file import save_to_docx
-from save_file import save_to_csv
+from classify_data import get_classified, add_alter
+from save_file import save_to_docx, save_to_csv
 
 
 FILENAME = '常用汉字列表音読み'
-FILEPATH = '/mnt/c/Users/cj/Desktop'
+FILEPATH = '/tmp'
 
 
 if __name__ == '__main__':

@@ -3,6 +3,8 @@ import os
 from wiktionary.agent import Agent
 from wiktionary.sections import check_wikitext, fetch_wikitext
 
+# Object represent the wiktionry.org, and map it as a dictionary in local.
+
 CACHE = 'wiktionary/cache.txt'
 
 def load_from_cache():
@@ -42,7 +44,7 @@ def fetch_wiktdata(kanji_list, update_flag):
                 print(kanji)
                 continue
 
-            wiki  = agent.fectch_youmi(kanji, index)
+            wiki  = agent.fectch_yomi(kanji, index)
             if not wiki:
                 print(kanji)
                 continue
@@ -64,10 +66,11 @@ def fetch_wiktdata(kanji_list, update_flag):
         save_to_cache(wiki_dict)
     return wiki_dict 
 
-def get_youmi(kj_list, update_flag):
+def get_yomi(kj_list, update_flag):
     wiki_dict = fetch_wiktdata(kj_list, update_flag)
     if update_flag:
         check_wikitext(wiki_dict)
+
     return fetch_wikitext(wiki_dict)
     
 if __name__ == '__main__':
@@ -77,5 +80,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 2 and sys.argv[1] == 'update':
         update_flag = True
     kj_dict, kj_list = get_source()
-    wiki_text = get_youmi(kj_list, update_flag)
+    wiki_text = get_yomi(kj_list, update_flag)
 

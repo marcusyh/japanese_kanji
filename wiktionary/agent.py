@@ -8,6 +8,7 @@ import re
 #https://github.com/5j9/wikitextparser
 #https://github.com/earwig/mwparserfromhell/
 
+# A agent class which is used to map to remote wiktionary.org page to local object
 class Agent():
     _url = 'https://ja.wiktionary.org/w/api.php'
     _fields = {'action': 'parse', 
@@ -38,7 +39,7 @@ class Agent():
             traceback.print_exc()
             return 9999
 
-    def fectch_youmi(self, kanji, index):
+    def fectch_yomi(self, kanji, index):
         fields = {x: y for x, y in self._fields.items()}
         fields.update({'page': kanji, 'prop': 'wikitext', 'section': index})
         try:

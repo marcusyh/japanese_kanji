@@ -1,6 +1,6 @@
 import sys
 from source.source import  get_source
-from wiktionary.wikt import get_youmi 
+from wiktionary.wikt import get_yomi 
 
 
 if __name__ == '__main__':
@@ -8,7 +8,7 @@ if __name__ == '__main__':
     if len(sys.argv) == 2 and sys.argv[1] == 'update':
         update_flag = True
     kj_dict, kj_list = get_source()
-    wiki_text = get_youmi(kj_list, update_flag)
+    wiki_text = get_yomi(kj_list, update_flag)
 
     def get_star_number(string): 
         count = 0
@@ -19,8 +19,8 @@ if __name__ == '__main__':
     
     ydict = {}
     import re
-    h1 = open('/tmp/youmi.txt', 'w')
-    h2 = open('/tmp/youmi2.txt', 'w')
+    h1 = open('/tmp/yomi.txt', 'w')
+    h2 = open('/tmp/yomi2.txt', 'w')
     for k, v in wiki_text.items():
         s = v.string.replace('\n', '\\n')
                 #'(?P<name2>[^=><!]*(?:<!--[^<!>]*-->)?[^=><!]*(?:<!--[^<!>]*-->)?)' \
@@ -39,7 +39,7 @@ if __name__ == '__main__':
         h1.write('%s\t%s\n' %(k, y['name1']))
         h2.write(z)
 
-        youmi = y['name1'].replace('\\n', '')
+        yomi = y['name1'].replace('\\n', '')
         x = re.match(\
                 '[^*]*'\
                 '\* *(?P<name0>[^*]{1,})'\
@@ -47,13 +47,13 @@ if __name__ == '__main__':
                 '(\*\* *(?P<name2>[^*]{1,}))?'\
                 '(\*\* *(?P<name3>[^*]{1,}))?'\
                 '\* *(?P<name5>[^*]{1,})\*? *: *(?P<name6>[^*]{1,})$'\
-                , youmi)
+                , yomi)
         ydict[k] = {}
         if x:
             y = x.groupdict()
             z = k + '\t' + '\t'.join([str(y[k]) for k in sorted(y)]) + '\n'
             continue
-            print(k, youmi)
+            print(k, yomi)
             print(z)
 
         x = re.match(\
@@ -65,16 +65,16 @@ if __name__ == '__main__':
                 '\* *(?P<name4>[^*]{1,})'\
                 '(\*\* *(?P<name5>[^*]{1,})(\*\*)? *: *(?P<name6>[^*]{1,}))'\
                 '(\*\* *(?P<name7>[^*]{1,})(\*\*)? *: *(?P<name8>[^*]{1,}))?$'\
-                , youmi)
+                , yomi)
         ydict[k] = {}
         if x:
             y = x.groupdict()
             z = k + '\t' + '\t'.join([str(y[k]) for k in sorted(y)]) + '\n'
             continue
-            print(k, youmi)
+            print(k, yomi)
             print(z)
 
-        print(k, youmi)
+        print(k, yomi)
 
 
         #if y['name5'] and y['name5'].find('*') >= 0:
