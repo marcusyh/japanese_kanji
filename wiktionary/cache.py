@@ -144,6 +144,7 @@ class WikiCache:
     def _save(self):
         with open(self.cache_path, 'w') as file:
             for k, v in self.wiki_dict.items():
+                v = [x.replace('\t', '') for x in v]
                 s = '\t'.join([k] + v) + '\n'
                 s = s.replace('\n', '\\n').replace('\r', '\\r')
                 file.write(s+'\n')
