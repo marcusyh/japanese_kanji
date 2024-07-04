@@ -125,6 +125,7 @@ def fetch_wikitext(wiki_dict):
     wiki_parsed = _convert_to_parse(wiki_dict)
     wikitext = {}
     for k, v in wiki_parsed.items():
+        print(type(v), v.sections[2])
         wiki_list = str(v.sections[2].lists()).replace('\\n', '')[11:-3]
         wikitext[k] = wiki_list #_convert_to_dict(wiki_list)
     return wikitext
@@ -132,5 +133,14 @@ def fetch_wikitext(wiki_dict):
 # Check the wikitext in wiki_dict to get the summary information and find errors as early as possible.
 def check_wikitext(wiki_dict):
     wiki_parsed = _convert_to_parse(wiki_dict)
-    _check_sections(wiki_parsed)
-    _check_yomi(wiki_parsed)
+    _check_sections(wiki_dict, wiki_parsed)
+    _check_yomi(wiki_dict, wiki_parsed)
+
+
+if __name__ == '__main__':
+    from cache import WikiCache
+    wc = WikiCache()
+    new_wiki_dict = {}
+    for k, v in wc.wiki_dict.items():
+        new_wiki_dict[k] = v[0]
+    check_wikitext(new_wiki_dict)
