@@ -134,14 +134,14 @@ def _parsing_pron_arch_build_tree(levels, texts):
 
     Args:
         levels (list of int): List of integers where each integer represents the hierarchical level of the 
-                              associated text in 'texts'. The base level (0) starts a new branch in the 
+                              associated text in 'texts'. The base level (1) starts a new branch in the 
                               resulting tree.
         texts (list of str): List of strings corresponding to different elements extracted from wikitext, 
                              typically as headers and their subsequent data.
 
     Returns:
         dict: A nested dictionary representing the hierarchical structure of headers and data. Each 'level' 
-              of 0 in 'levels' starts a new dictionary key, with the value being the recursive call to handle 
+              of 1 in 'levels' starts a new dictionary key, with the value being the recursive call to handle 
               all subsequent sub-levels and texts.
               
     Example:
@@ -150,8 +150,15 @@ def _parsing_pron_arch_build_tree(levels, texts):
             texts = ["text1", "text1.1", "text1.1.1", "text1.2", "text2", "text2.1"]
         Output:
             {
-                "text1": {"text1.1": {"text1.1.1": {}}, "text1.2": {}},
-                "text2": {"text2.1": {}}
+                "text1": {
+                    "text1.1": {
+                        "text1.1.1": {}
+                    },
+                    "text1.2": {}
+                },
+                "text2": {
+                    "text2.1": {}
+                }
             }
     """
     # Check if there are no levels provided (base case for recursion), return an empty dictionary
