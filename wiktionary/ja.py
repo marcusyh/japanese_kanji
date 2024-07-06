@@ -1,4 +1,5 @@
 import re
+import copy
 from cache import WikiCache
 from utils import fileter_characters
 
@@ -128,8 +129,8 @@ def _parsing_pron_arch_build_tree(levels, texts):
     """
     Constructs a hierarchical tree representation from provided text and their associated levels.
 
-    This function recursively generates a nested dictionary where each dictionary key is a text header 
-    corresponding to a 'level' of 0, and its value is a further dictionary representing sub-levels and their 
+    This function recursively generates a nested list where the first element of each list is a text header 
+    corresponding to a 'level' of 0, and the following items in the list representing sub-levels and their 
     corresponding texts. The recursion continues down through levels creating a tree-like structure.
 
     Args:
@@ -140,8 +141,8 @@ def _parsing_pron_arch_build_tree(levels, texts):
                              typically as headers and their subsequent data.
 
     Returns:
-        dict: A nested dictionary representing the hierarchical structure of headers and data. Each 'level' 
-              of 1 in 'levels' starts a new dictionary key, with the value being the recursive call to handle 
+        dict: A nested list representing the hierarchical structure of headers and data. Each 'level' 
+              of 1 in 'levels' starts a new list, with the value being the recursive call to handle 
               all subsequent sub-levels and texts.
               
     Example:
@@ -149,27 +150,24 @@ def _parsing_pron_arch_build_tree(levels, texts):
             levels = [1, 2, 3, 2, 1, 2]
             texts = ["text1", "text1.1", "text1.1.1", "text1.2", "text2", "text2.1"]
         Output:
-            {
-                "text1": {
-                    "text1.1": {
-                        "text1.1.1": {}
-                    },
-                    "text1.2": {}
-                },
-                "text2": {
-                    "text2.1": {}
-                }
-            }
+            [
+                "text1", ["text1.1", "text1.1.1"], "text1.2",
+            ],
+            [
+                "text2", "text2.1"
+            ]
     """
     # Check if there are no levels provided (base case for recursion), return an empty dictionary
     if not levels:
-        return {}
+        return []
     
     # Create an empty dictionary where the results of parsing will be stored
-    result = {}
+    result = []
     
     # Decrease each level by one to facilitate sub-level parsing relative to the current level
-    new_levels = [x-1 for x in levels]
+    new_levels = levels
+    while min(new_levels):
+        new_levels = [x-1 for x in new_levels]
 
     # Initialize lists to store sub-levels and sub-texts that will compose subtrees
     sub_levels = []
@@ -190,7 +188,7 @@ def _parsing_pron_arch_build_tree(levels, texts):
         
         # Encountering a zero level: wrap up/sub-tree the previous block and start a new one
         if previous_text:
-            result[previous_text] = _parsing_pron_arch_build_tree(sub_levels, sub_texts)
+            result.append([previous_text] + _parsing_pron_arch_build_tree(sub_levels, sub_texts))
             sub_texts = []
             sub_levels = []
         
@@ -198,7 +196,7 @@ def _parsing_pron_arch_build_tree(levels, texts):
         previous_text = text
     
     # After loop, process last accumulated sublist to ensure all texts are linked to the right headers
-    result[previous_text] = _parsing_pron_arch_build_tree(sub_levels, sub_texts)
+    result.append([previous_text] + _parsing_pron_arch_build_tree(sub_levels, sub_texts))
 
     # Return the constructed tree-like dictionary
     return result
@@ -217,11 +215,30 @@ def parsing_pron_arch(kanji, pron):
             continue
         striped = item.lstrip('*')
         levels.append(len(item) - len(striped))
-        texts.append(f'{index}__{striped}')
+        texts.append(striped)
 
-    print(kanji, pron, _parsing_pron_arch_build_tree(levels, texts))
+    arch_tree = _parsing_pron_arch_build_tree(levels, texts)
 
-    return _parsing_pron_arch_build_tree(levels, texts)
+    kunyomi_merge = False
+    for index, item in enumerate(arch_tree):
+        if index+1 < len(arch_tree) and '訓読み' in item[0]:
+            kunyomi_merge = True
+            break
+    if kunyomi_merge:
+        tmp = copy.deepcopy(arch_tree[:index+1])
+        tmp[index] += arch_tree[index+1:]
+        arch_tree = tmp
+
+    if len(arch_tree) >= 2 and  '音読み' in arch_tree[0][0] and '無し' in arch_tree[1][0] and len(arch_tree[0]) == 1:
+        arch_tree[0] += arch_tree[1]
+        arch_tree.remove(arch_tree[1])
+    if len(arch_tree) > 2:
+        print(kanji, len(arch_tree))
+        for x in arch_tree:
+            print(x)
+        print('\n\n')
+
+    return arch_tree
 
 
 """
@@ -245,6 +262,7 @@ if __name__ == '__main__':
     for k, v in wiki_dict.items():
         found = select_ja_pronucation(v)
         parsing_pron_arch(k, found)
+    """
         if not found:
             continue
         x = len(found)
@@ -255,3 +273,4 @@ if __name__ == '__main__':
     for k in sorted(a):
         print(k, a[k])
     print(a)
+    """
