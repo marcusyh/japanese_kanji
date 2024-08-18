@@ -121,9 +121,10 @@ class WikiCache:
     """
     def __init__(self):
         self.cache_path = 'wiktionary/cache.txt'
-        self.wiki_dict = {}
+        self.patch_path = 'wiktionary/patch.txt'
         self.agent = None
-        self._load()
+        self.patch = self._load_patch()
+        self.wiki_dict = self._load()
 
 
     def _create_agent(self):
@@ -135,10 +136,24 @@ class WikiCache:
     def _load(self):
         if not os.path.isfile(self.cache_path):
             return {}
+        wiki_dict = {}
         with open(self.cache_path, 'r') as file:
             for line in file:
                 key, *values = line.strip().replace('\\n', '\n').replace('\\r', '\r').split('\t')
-                self.wiki_dict[key] = values
+                if key in self.patch:
+                    continue
+                wiki_dict[key] = values
+        return wiki_dict
+
+    def _load_patch(self):
+        if not os.path.isfile(self.patch_path):
+            return {}
+        patch = {}
+        with open(self.patch_path, 'r') as file:
+            for line in file:
+                line = json.loads(line)
+                patch.update(line)
+        return patch
 
 
     def _save(self):

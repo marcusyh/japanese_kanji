@@ -1,73 +1,7 @@
 import re
 import copy
 from cache import WikiCache
-from utils import fileter_characters
-
-def split_groups(k, wikitext):
-    """
-    Parses the provided wikitext for a given kanji entry and organizes it into a structured dictionary.
-    
-    This function iterates through lines of wikitext and classifies them into sections and subsections
-    based on their header levels. Non-header lines are gathered into lists that represent the content
-    under their respective headers.
-    
-    Parameters:
-        wikitext (str): The string of wikitext that includes textual data possibly containing headers and 
-                        structured information.
-    
-    Returns:
-        dict: A dictionary where each key is a header title and each value is a list that begins with a 
-              tuple containing the header title and its level, followed by the content lines under that 
-              header.
-              
-    Example of structure:
-        {
-            'Header1': [1, 'Content line', ...],
-            'Header2': [2, 'Content line', ...],
-            ...
-        }
-    """
-    # Initialize an empty dictionary to hold structured data parsed from wikitext
-    result = {}
-
-    # Initialize sub group value
-    sub_group = [] # List to keep track of subsections in the wikitext
-    header = None  # To hold the current header name
-
-    # Iterating over each line in the wikitext
-    for line in wikitext.split('\n'):
-
-        # Skipping empty lines
-        if line.strip() == "":
-            continue
-        
-        # Remove leading and trailing whitespace, as well as HTML comments from the line
-        line = line.strip()
-        line = re.sub(r'\s*<!--[^->]*-->\s*', '', line)
-        
-        # If the line is a header (i.e., enclosed in equal signs), it's header of wikitext
-        if line.startswith('=') and line.endswith('='):
-
-            # Check if there's an ongoing header; if so, store accumulated lines in result
-            if header:
-                if header not in result:
-                    result[header] = []
-                result[header] += sub_group
-
-            # when meet a new header
-            header = line.strip('=').strip() # Reset header to the new header and strip the surrounding equal signs
-            level = line.count('=') // 2     # Determine the header level based on the number of equal signs
-            sub_group = [level]
-    
-        else:
-            # Add non-header lines to the sub_group
-            sub_group.append(line.strip())
-
-    # After the loop, save the last processed header and its contents to the result
-    result[header] = sub_group
-
-    return result
-
+from utils import fileter_characters, split_groups, parsing_pron_arch_build_tree
 
 
 def select_ja_pronucation(wikitionary):
@@ -93,6 +27,16 @@ def select_ja_pronucation(wikitionary):
         3. If the second pass also fails, it looks for keys containing '発音' with values that include '読み'.
 
     Each of these passes returns immediately if it finds relevant data, skipping subsequent searches.
+
+    Output Example:
+        [
+            3,
+            '* 音読み',
+            '** [[呉音]] : [[ロク]]',
+            '** [[漢音]] : [[リク]]',
+            '* 訓読み',
+            '*: [[ころす|ころ-す]]、[[けずる|けず-る]]、[[あわす|あわ-す]]'
+        ]
     """
 
     # Initialize an empty dictionary to build a simplified structure from the passed wikitionary.
@@ -124,85 +68,9 @@ def select_ja_pronucation(wikitionary):
 
     return []
 
-
-def _parsing_pron_arch_build_tree(levels, texts):
-    """
-    Constructs a hierarchical tree representation from provided text and their associated levels.
-
-    This function recursively generates a nested list where the first element of each list is a text header 
-    corresponding to a 'level' of 0, and the following items in the list representing sub-levels and their 
-    corresponding texts. The recursion continues down through levels creating a tree-like structure.
-
-    Args:
-        levels (list of int): List of integers where each integer represents the hierarchical level of the 
-                              associated text in 'texts'. The base level (1) starts a new branch in the 
-                              resulting tree.
-        texts (list of str): List of strings corresponding to different elements extracted from wikitext, 
-                             typically as headers and their subsequent data.
-
-    Returns:
-        dict: A nested list representing the hierarchical structure of headers and data. Each 'level' 
-              of 1 in 'levels' starts a new list, with the value being the recursive call to handle 
-              all subsequent sub-levels and texts.
-              
-    Example:
-        Input: 
-            levels = [1, 2, 3, 2, 1, 2]
-            texts = ["text1", "text1.1", "text1.1.1", "text1.2", "text2", "text2.1"]
-        Output:
-            [
-                "text1", ["text1.1", "text1.1.1"], "text1.2",
-            ],
-            [
-                "text2", "text2.1"
-            ]
-    """
-    # Check if there are no levels provided (base case for recursion), return an empty dictionary
-    if not levels:
-        return []
-    
-    # Create an empty dictionary where the results of parsing will be stored
-    result = []
-    
-    # Decrease each level by one to facilitate sub-level parsing relative to the current level
-    new_levels = levels
-    while min(new_levels):
-        new_levels = [x-1 for x in new_levels]
-
-    # Initialize lists to store sub-levels and sub-texts that will compose subtrees
-    sub_levels = []
-    sub_texts = []
-    
-    # Variable to store the current header text to be used as a key for sub-trees
-    previous_text = None
-    
-    # Iterate through each level and its corresponding text
-    for index, level in enumerate(new_levels):
-        text = texts[index]
-        
-        # If the level is non-zero, it indicates it is a sub-level to the current block
-        if level:
-            sub_levels.append(level)
-            sub_texts.append(text)
-            continue
-        
-        # Encountering a zero level: wrap up/sub-tree the previous block and start a new one
-        if previous_text:
-            result.append([previous_text] + _parsing_pron_arch_build_tree(sub_levels, sub_texts))
-            sub_texts = []
-            sub_levels = []
-        
-        # Update previous_text to be the new block's header key
-        previous_text = text
-    
-    # After loop, process last accumulated sublist to ensure all texts are linked to the right headers
-    result.append([previous_text] + _parsing_pron_arch_build_tree(sub_levels, sub_texts))
-
-    # Return the constructed tree-like dictionary
-    return result
     
 
-def parsing_pron_arch(kanji, pron):
+def parsing_pron_arch(pron):
     """
     Parses hierarchical pronunciation architecture from a given list of pronunciation data.
 
@@ -248,6 +116,49 @@ def parsing_pron_arch(kanji, pron):
     """
 
     def create_hierarchical_tree(pron):
+        """
+        Constructs a hierarchical tree based on the pronunciation annotation format found in the input list.
+
+        This function is designed to interpret the structured pronunciation data representing different levels
+        of pronunciation details in the 'pron' list. It processes this list to create a hierarchical tree structure
+        where each node represents a certain level of detail or categorization in the pronunciation data.
+
+        The input list is expected to have pronunciation entries starting with asterisks '*', which indicate the
+        hierarchical level. Each higher number of asterisks denotes a deeper level in the hierarchy. This function
+        strips the asterisks to determine the level and extracts the meaningful text to construct a hierarchy tree.
+
+        Args:
+            pron (list): A list containing pronunciation data beginning with a header level followed by strings.
+                        Each string represents a pronunciation detail at a certain level indicated by the asterisks.
+                        Example input:
+                            [
+                                3,
+                                '* Level 1 Pronunciation',
+                                '** Level 2 Detail',
+                                '*** Level 3 More Specific Detail'
+                            ]
+
+        Returns:
+            list: A hierarchical structure list, where each sub-list represents a node in the tree that corresponds to
+                a level of pronunciation detail. The structure and depth of the list reflect the categorization and
+                specificity of pronunciation as indicated by the original asterisks.
+                Example output:
+                    [
+                        ['Level 1 Pronunciation', 
+                            ['Level 2 Detail',
+                                ['Level 3 More Specific Detail']
+                            ]
+                        ]
+                    ]
+
+        Notes:
+            - The function expects the first element of the input 'pron' list to be a numerical header level,
+            which is omitted from processing.
+            - Only strings that start with '*' are considered for processing, indicating their relevance 
+            in the pronunciation hierarchy.
+            - The intermediate processing involves stripping asterisks and counting them to determine the
+            hierarchical levels, which are essential for constructing the return structure.
+        """
         texts = []  # This will store the stripped text content of the entries
         levels = []  # This will store the level of each entry for hierarchy construction
         
@@ -265,7 +176,7 @@ def parsing_pron_arch(kanji, pron):
             texts.append(striped)
 
         # Build hierarchical tree structure from level and text data
-        arch_tree = _parsing_pron_arch_build_tree(levels, texts)
+        arch_tree = parsing_pron_arch_build_tree(levels, texts)
 
         return arch_tree
 
@@ -350,7 +261,6 @@ def parsing_pron_arch(kanji, pron):
                     kunyomi.insert(0, '訓読み')
                 new_arch_tree.append(kunyomi)
                 arch_tree = new_arch_tree
-                print(kanji, len(arch_tree), arch_tree)
         
         return arch_tree
 
@@ -368,19 +278,127 @@ def parsing_pron_arch(kanji, pron):
     return arch_tree
 
 
+def parsing_onyomi(kanji, pron_arch):
+    """
+    pron_arch example of kanji '戮':
+    [
+        [
+            ' 音読み',
+            [
+                ' [[呉音]] : [[ロク]]'
+            ],
+            [
+                ' [[漢音]] : [[リク]]'
+            ]
+        ],
+        [
+            ' 訓読み',
+            [
+                ': [[ころす|ころ-す]]、[[けずる|けず-る]]、[[あわす|あわ-す]]'
+            ]
+        ]
+    ]
+    """
+    if not len(pron_arch):
+        return {}
+    
+    flag = False
+    onyomi = {}
+    for element in pron_arch:
+        """
+        an exmple of element[1:]
+        [
+            ' 音読み',
+            [
+                ' [[呉音]] : [[ロク]]'
+            ],
+            [
+                ' [[漢音]] : [[リク]]'
+            ]
+        ]
+        """
+        if not element:
+            continue
 
-if __name__ == '__main__':
+        if '音読み' not in element[0]:
+            continue
+
+        if kanji in ['漁', '算']:
+            element = element[:4]
+        if kanji == '行':
+            element = [element[0], element[1], element[3], element[5], element[6]]
+        if kanji == '蔵':
+            element = [element[0], element[1], element[3]]
+        if kanji == '法':
+            element = [
+                ' 音読み',
+                ['[[呉音]]: [[ホウ]]、[[ホフ]]、[[ホッ]]'],
+                ['[[漢音]]: [[ホウ]]、[[ハフ]]、[[ハッ]]']
+            ]
+        if kanji == '合':
+            element = [
+                ' 音読み',
+                [' [[呉音]] : [[ゴウ]]、[[ガフ]]、[[ガッ]]'],
+                [' [[漢音]] : [[コウ]]、[[カフ]]、[[カッ]]']
+            ]
+        if kanji == '月':
+            element = [
+                '音読み',
+                [' [[呉音]] : [[ガチ]]（グヮチ）、[[ガツ]]（グヮツ）'],
+                [' [[漢音]] : [[ゲツ]]（グヱツ）'],
+                [' [[慣用音]] : [[ガツ]]（グヮツ）']
+            ]
+        for text in element[1:]:
+            if type(text) == str:
+                continue
+
+            # some kanji has specifal format
+            if kanji in ['十', '貼', '禅', '作']:
+                text = text[:1]
+            if kanji == '芸':
+                if text[0] == ':「藝」の[[新字体]]':
+                    continue
+                else:
+                    text = text[1]
+            if kanji == '央':
+                if text[0] == '一':
+                    text = text[1]
+                else:
+                    continue
+            if kanji == '灯':
+                continue
+
+            # remove [], addtional info, uniform charcters
+            value = re.sub(r'[\[\]]', '', text[0])
+            value = re.sub(r'<ref.*?</ref>', '', value)
+            value = re.sub(r'<ref.*?/>', '', value)
+            value = value.replace('（', '(').replace('）', ')').replace('：', ':')
+            value = re.sub(r'\(表外[^\)]*\)', '(表外)', value)
+            value = re.sub(r'Wiktionary:漢字索引\s*音訓\s*[^\|]*\|', '', value)
+            value = re.sub(r':wikipedia:ja:[^\|]*\|', '', value)
+            value = re.sub(r'\(例:[^\)]+\)', '', value)
+            #value = re.sub(r'(\([^\)]*\))\([^\)]*\)', '(\1)', value)
+            value = re.sub(r'\(([^:]+):[^\)]+\)', r'(\1)', value)
+            if value.strip() == '無し':
+                continue
+            x = value.split(':')
+            print(kanji, x)
+            if len(x) != 2:
+                print(kanji, value, [i.strip() for i in x])
+
+def parsing_ja():
     wc = WikiCache()
     wiki_dict = {}
-    for k, v in wc.wiki_dict.items():
-        v = split_groups(k, v[0])
-        wiki_dict[k] = v
+    for kanji, details_texts in wc.wiki_dict.items():
+        details_groups = split_groups(kanji, details_texts[0])
+        wiki_dict[kanji] = details_groups
 
-
-    a = {}
-    for k, v in wiki_dict.items():
-        found = select_ja_pronucation(v)
-        parsing_pron_arch(k, found)
+    pronounce = {}
+    for kanji, details in wiki_dict.items():
+        pron_text = select_ja_pronucation(details)
+        pron_arch = parsing_pron_arch(pron_text)
+        parsing_onyomi(kanji, pron_arch)
+        
     """
         if not found:
             continue
@@ -393,3 +411,6 @@ if __name__ == '__main__':
         print(k, a[k])
     print(a)
     """
+
+if __name__ == '__main__':
+    parsing_ja()

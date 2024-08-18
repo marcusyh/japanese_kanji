@@ -1,84 +1,138 @@
-import traceback
-import os
-from wiktionary.agent import Agent
-from wiktionary.sections import check_wikitext, fetch_wikitext
+from wiktionary.cache import WikiCache
 
 # Object represent the wiktionry.org, and map it as a dictionary in local.
 
-CACHE = 'wiktionary/cache.txt'
 
-def load_from_cache():
-    if not os.path.isfile(CACHE):
-        return {}
-    wiki_dict = {}
-    h = open(CACHE, 'r')
-    for s in h.readlines():
-        items = s.strip().replace('\\n', '\n').replace('\\r', '\r').split('\t')
-        wiki_dict[items[0]] = '\t'.join(items[1:])
-    h.close()
-    return wiki_dict
+def parse_wikitext(wikitext):
+    lines = wikitext.split('\n')
+    result = {}
+    stack = [result]  # 用一个栈来维护当前的嵌套字典结构
 
-def save_to_cache(wiki_dict):
-    h = open(CACHE, 'w')
-    for k, v in wiki_dict.items():
-        s= '%s\t%s\n' %(k, v.replace('\n', '\\n').replace('\r', '\\r'))
-        h.write(s)
-    h.close()
-
-def fetch_wiktdata(kanji_list, update_flag):
-    wiki_dict = load_from_cache()
-    if not update_flag:
-        return wiki_dict
-
-    agent = Agent()
-    count = 0
-
-    for kanji in kanji_list:
-        if kanji in wiki_dict:
+    for line in lines:
+        if line.strip() == "":
             continue
-        continue
 
-        try:
-            index = agent.fectch_sections(kanji)
-            if not index or int(index) > 99:
-                print(kanji)
-                continue
+        # check the level of header or sub header
+        level = line.count('=') // 2
+        title = line.strip('=').strip()
 
-            wiki  = agent.fectch_yomi(kanji, index)
-            if not wiki:
-                print(kanji)
-                continue
+        if level > 0:
+            # 通过栈的深度与标题等级判断，处理嵌套
+            if level > len(stack):
+                # 更深层的标题，继续嵌套
+                new_dict = {}
+                stack[-1][title] = new_dict
+                stack.append(new_dict)
+            else:
+                # 返回到正确的层级，可能是相同层或者更高层的标题
+                stack = stack[:level]
+                new_dict = {}
+                stack[-1][title] = new_dict
+                stack.append(new_dict)
+        else:
+            # 非标题行，添加到最内层的字典中
+            if "__content__" not in stack[-1]:
+                stack[-1]["__content__"] = []
+            stack[-1]["__content__"].append(line)
 
-            wiki_dict[kanji] = wiki
+    return result
 
-        except Exception:
-            traceback.print_exc()
 
-        if count % 20 == 0:
-            print(count)
-        if count % 200 == 0 and count != 0:
-            save_to_cache(wiki_dict)
-            print('saved to cache')
+def get_ja_pronunciation():
+    wc = WikiCache()
+    wiki_dict = wc.wiki_dict()
+    for kanji, item in wiki_dict.items():
+        ja_text, zh_text_ja, zh_text_zh = item
 
-        count += 1
+```
+'=={{L|ja}}==',
+    '[[Category:{{ja}}|にゆう]]',
+        '===={{pron}}====',
+            '* 音読み   :',
+                '** [[呉音]] : [[ニュウ]]（ニフ:[[入声]]であり無声子音の前では、「ニッ」となる）',
+                '** [[漢音]] : [[ジュウ]]（ジフ）',
+                '** [[慣用音]] : [[ジュ]]',
+            '* 訓読み   : [[いる|い-る]]、[[いれる|い−れる]、][[はいる|はい-る]]､[[しお]]',
+        '===={{prov}}====',
+            '{{top}}',
+            '*{{ふりがな|入会|yomi1=[[いりあい]]|yomi2=ニュウカイ|yomilink=n}}',
+                '**[[入会権]]',
+                '**[[入会地]]',
+            '*{{ふりがな|入相|yomi1=[[いりあい]]|yomi2=ニュウショウ|yomilink=n}}',
+            '*[[入口]]',
+            '*[[入母屋]]',
+            '*{{ふりがな|入魂|ジッコン|yomi2=ニュウコン|yomilink=n}}',
+            '*{{ふりがな|入水|ジュスイ|yomi2=ニュウスイ|yomilink=n}}',
+            '*[[入内]]',
+            '*[[入声]]',
+            '*[[入唐]]',
+            '*[[入学]]',
+            '*[[入管]]',
+            '*[[入金]]',
+            '*[[入室]]',
+            '*[[入出]]',
+            '*[[入籍]]',
+            '*[[入道]]',
+            '*[[入念]]',
+            '*[[入門]]',
+            '*[[入力]]',
+            '*[[吸入]]',
+            '*[[歳入]]',
+            '*[[収入]]',
+            '*{{ふりがな|一入|ひとしお}}',
+            '{{bottom}}'
+```
 
-    if count % 200 > 0:
-        save_to_cache(wiki_dict)
-    return wiki_dict 
-
-def get_yomi(kj_list, update_flag):
-    wiki_dict = fetch_wiktdata(kj_list, update_flag)
-    if update_flag:
-        check_wikitext(wiki_dict)
-
-    return fetch_wikitext(wiki_dict)
-    
-if __name__ == '__main__':
-    import sys
-    from source.source import get_source
-    update_flag = False
-    if len(sys.argv) == 2 and sys.argv[1] == 'update':
-        update_flag = True
-    kj_dict, kj_list = get_source()
-    wiki_text = get_yomi(kj_list, update_flag)
+{
+    '{{L|ja}}': {
+        '__content__': ['[[Category:{{ja}}|にゆう]]'],
+        '{{pron}}': {
+            '__content__': [
+                '* 音読み   :',
+                '** [[呉音]] : [[ニュウ]]（ニフ:[[入声]]であり無声子音の前では、「ニッ」となる）',
+                '** [[漢音]] : [[ジュウ]]（ジフ）',
+                '** [[慣用音]] : [[ジュ]]',
+                '* 訓読み   : [[いる|い-る]]、[[いれる|い−れる]、][[はいる|はい-る]]､[[しお]]'
+            ],
+            '{{prov}}': {
+                '__content__': ['{{top}}']
+            }
+        }
+    },
+    '*{{ふりがな|入会|yomi1=[[いりあい]]|yomi2=ニュウカイ|yomilink=n}}': {
+        '__content__': [
+            '**[[入会権]]',
+            '**[[入会地]]'
+        ]
+    },
+    '*{{ふりがな|入相|yomi1=[[いりあい]]|yomi2=ニュウショウ|yomilink=n}}': {
+        '__content__': [
+            '*[[入口]]',
+            '*[[入母屋]]'
+        ]
+    },
+    '*{{ふりがな|入魂|ジッコン|yomi2=ニュウコン|yomilink=n}}': {},
+    '*{{ふりがな|入水|ジュスイ|yomi2=ニュウスイ|yomilink=n}}': {
+        '__content__': [
+            '*[[入内]]',
+            '*[[入声]]',
+            '*[[入唐]]',
+            '*[[入学]]',
+            '*[[入管]]',
+            '*[[入金]]',
+            '*[[入室]]',
+            '*[[入出]]',
+            '*[[入籍]]',
+            '*[[入道]]',
+            '*[[入念]]',
+            '*[[入門]]',
+            '*[[入力]]',
+            '*[[吸入]]',
+            '*[[歳入]]',
+            '*[[収入]]',
+            '*{{ふりがな|一入|ひとしお}}',
+            '{{bottom}}'
+        ]
+    }
+}
 
