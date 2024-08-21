@@ -302,8 +302,14 @@ def parsing_onyomi(kanji, pron_arch):
     if not len(pron_arch):
         return {}
     
-    flag = False
     onyomi = {}
+    key_name_map = {
+        "宋音": "宋唐音",
+        "唐音": "宋唐音",
+        "唐宋音": "宋唐音",
+        "新漢音": "漢音",
+        "特殊な慣用音": "慣用音"
+    }
     for element in pron_arch:
         """
         an exmple of element[1:]
@@ -322,31 +328,75 @@ def parsing_onyomi(kanji, pron_arch):
 
         if '音読み' not in element[0]:
             continue
-
+        if kanji in ['興']:
+            element = element[:3]
+        if kanji in ['曹', '興']:
+            element = element[:3]
         if kanji in ['漁', '算']:
             element = element[:4]
         if kanji == '行':
             element = [element[0], element[1], element[3], element[5], element[6]]
         if kanji == '蔵':
             element = [element[0], element[1], element[3]]
+        if kanji == '貪':
+            element = [element[0], element[1], element[2], element[4]]
+        if kanji == '打':
+            element = [element[0], element[1], element[3], element[4]]
+        if kanji == '加':
+            element = [
+                '音読み',
+                ['[[漢音]]: [[カ]]']
+            ]
         if kanji == '法':
             element = [
-                ' 音読み',
+                '音読み',
                 ['[[呉音]]: [[ホウ]]、[[ホフ]]、[[ホッ]]'],
                 ['[[漢音]]: [[ホウ]]、[[ハフ]]、[[ハッ]]']
             ]
         if kanji == '合':
             element = [
-                ' 音読み',
+                '音読み',
                 [' [[呉音]] : [[ゴウ]]、[[ガフ]]、[[ガッ]]'],
                 [' [[漢音]] : [[コウ]]、[[カフ]]、[[カッ]]']
             ]
         if kanji == '月':
             element = [
                 '音読み',
+                [' [[呉音]] : [[ハク]]'],
+                [' [[漢音]] : [[ハク]]']
+            ]
+        if kanji == '寝':
+            element = [
+                '音読み',
+                [' [[呉音]] : [[シン]]([[シム]])'],
+                [' [[漢音]] : [[シン]]([[シム]])']
+            ]
+        if kanji == '弁':
+            element = [
+                '音読み',
+                [' [[呉音]] : [[ベン]]'],
+                [' [[漢音]] : [[ヘン]]、[[ハン]]']
+            ]
+        if kanji == '終':
+            element = [
+                '音読み',
+                [' [[呉音]] : [[シュ]]'],
+                [' [[漢音]] : [[シュウ]]([[シュゥ]])']
+            ]
+        if kanji == '畠':
+            element = [
+                '音読み',
                 [' [[呉音]] : [[ガチ]]（グヮチ）、[[ガツ]]（グヮツ）'],
                 [' [[漢音]] : [[ゲツ]]（グヱツ）'],
                 [' [[慣用音]] : [[ガツ]]（グヮツ）']
+            ]
+        if kanji == '分':
+            element = [
+                '音読み',
+                [' [[呉音]] : [[ブン]]、[[フン]]'],
+                [' [[漢音]] : [[フン]]、[[プン]]'],
+                [' [[宋音]] : [[フン]]'],
+                [' [[慣用音]] : [[ブ]]']
             ]
         for text in element[1:]:
             if type(text) == str:
@@ -368,23 +418,83 @@ def parsing_onyomi(kanji, pron_arch):
             if kanji == '灯':
                 continue
 
-            # remove [], addtional info, uniform charcters
-            value = re.sub(r'[\[\]]', '', text[0])
-            value = re.sub(r'<ref.*?</ref>', '', value)
-            value = re.sub(r'<ref.*?/>', '', value)
-            value = value.replace('（', '(').replace('）', ')').replace('：', ':')
-            value = re.sub(r'\(表外[^\)]*\)', '(表外)', value)
-            value = re.sub(r'Wiktionary:漢字索引\s*音訓\s*[^\|]*\|', '', value)
-            value = re.sub(r':wikipedia:ja:[^\|]*\|', '', value)
-            value = re.sub(r'\(例:[^\)]+\)', '', value)
-            #value = re.sub(r'(\([^\)]*\))\([^\)]*\)', '(\1)', value)
-            value = re.sub(r'\(([^:]+):[^\)]+\)', r'(\1)', value)
-            if value.strip() == '無し':
+            # remove [], replace full-width char to half-width, change others sign to space
+            text = re.sub(r'[\[\]]', '', text[0])
+            text = text.replace('（', '(').replace('）', ')').replace('：', ':')
+            text = re.sub(r'、|・|　+|,|\'|\u3000', ' ', text)
+            text = re.sub(r'\s+', ' ', text)
+
+            # remove additional info
+            text = re.sub(r'<ref.*?</ref>', '', text)
+            text = re.sub(r'<ref.*?/>', '', text)
+            text = re.sub(r'Wiktionary:漢字索引\s*音訓\s*[^\|]*\|', '', text)
+            text = re.sub(r':wikipedia:ja:[^\|]*\|', '', text)
+            text = re.sub(r'{{要出典}}', '', text)
+
+            # remove addtional info of value part which is the substring after ':' of text
+            text = re.sub(r'\(例:[^\)]+\)', '', text)
+            text = re.sub(r'\s+例．.*$', '', text)
+            text = re.sub(r'\(\s*表外:.*\)', '(表外)', text)
+            text = re.sub(r'\(表外[^\)]*\)', '(表外)', text)
+            text = re.sub(r'{{音\|([^}]*)}}', r'\1', text)
+            text = re.sub(r'[\u3041-\u3096]*\|([^\s*])', r'\1', text)
+
+            # uniform value part of text
+            text = re.sub(r'([^\s\(\)]*)\((\s*[^\s\(\)]*)\s+([^\s\(\)]*)\)', r"\1(\2)(\3)", text)
+            text = re.sub(r'([^\s\(\)]*)\(\s*([^\s\(\)]*)\s+([^\s\(\)]*)\s+([^\s\(\)]*)\)', r"\1(\2)(\3)(\4)", text)
+
+            # uniform string
+            text = re.sub(r'\(([^:]+):[^\)]+\)', r'(\1)', text)
+
+            # skip if there is no value
+            if text.strip() == '無し':
                 continue
-            x = value.split(':')
-            print(kanji, x)
-            if len(x) != 2:
-                print(kanji, value, [i.strip() for i in x])
+
+            keys, values = text.split(':')
+            key_list = [key_name_map[key] if key in key_name_map else key for key in keys.strip().split()]
+
+            value_list = values.strip().split()
+            new_value_list = []
+            for value in value_list:
+                matched = re.match(r'^(?P<pron>[^\(]*)(\((?P<old_pron>[^\)]*)\))?(\((?P<old_pron2>[^\)]*)\))?(\((?P<type>[^\)]*)\))?$', value)
+                value = {}
+                for k, v in matched.groupdict().items():
+                    if not v:
+                        continue
+
+                    if v in ['常用外', '表外']:
+                        value[k] = '表外'
+                        continue
+
+                    # pure katakana
+                    flag = False
+                    for ch in v:
+                        if ord(ch) >= 0x30a1 and ord(ch) <= 0x30ff or ord(ch) >= 0x1b132 and ord(ch) <= 0x1b167:
+                            continue
+                        flag = True
+                        break
+                    if not flag:
+                        value[k] = v
+                        continue
+
+                    # pure hiragana
+                    flag = False
+                    for ch in v:
+                        if ord(ch) >= 0x3041 and ord(ch) <= 0x3096:
+                            continue
+                        flag = True
+                        break
+                    if not flag:
+                        value[k] = ''.join([chr(ord(char) + 0x60) for char in v])
+                        continue
+
+                    print(kanji, keys, k, v, '\t\t', element)
+
+                new_value_list.append(value)
+
+            print(kanji, key_list, new_value_list)
+
+
 
 def parsing_ja():
     wc = WikiCache()
@@ -397,8 +507,8 @@ def parsing_ja():
     for kanji, details in wiki_dict.items():
         pron_text = select_ja_pronucation(details)
         pron_arch = parsing_pron_arch(pron_text)
-        parsing_onyomi(kanji, pron_arch)
-        
+        x = parsing_onyomi(kanji, pron_arch)
+
     """
         if not found:
             continue
