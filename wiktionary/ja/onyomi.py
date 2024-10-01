@@ -15,5 +15,5 @@ def process_onyomi(pron_arch_all):
                 all_keys[key] = all_keys.get(key, 0) + 1
                 
     merged_dict = convert_to_merged_dict(onyomi, include_hyogai=False)
-    print_all_kanji_info(merged_dict, show_old_pron=True)
+    print_all_kanji_info(merged_dict, show_old_pron=False)
     return onyomi, all_keys

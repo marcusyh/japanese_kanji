@@ -6,19 +6,20 @@ def get_default_param(func, param_name, default_value):
 
 
 def generate_headers(show_old_pron):
-    headers = ['漢字']
+    headers = ["order"]
     for reading_type in ['呉音', '漢音', '慣用音', '宋唐音', '古音']:
         headers.append(reading_type)
         if show_old_pron:
             headers.append(reading_type + '_old')
+    headers.append('漢字')
     return headers
 
 
-def convert_to_rows(merged_kanji_info: Dict[str, Any], headers: List[str]) -> List[List[str]]:
+def convert_to_rows(merged_kanji_info: List[Any], headers: List[str]) -> List[List[str]]:
     rows = []
-    for k, v in merged_kanji_info:
-        row = []
-        for column in headers:
+    for idx, v in enumerate(merged_kanji_info):
+        row = [str(idx+1)]
+        for column in headers[1:]:
             if column in v:
                 row.append('、'.join([p for p in v[column]]))
             else:
