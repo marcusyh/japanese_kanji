@@ -374,8 +374,8 @@ def parse_values_structure(kanji, values):
                 continue
 
             # Print the values that don't follow the expected patterns for manual inspection
-            print(kanji, keys, k, v)
-            print(json.dumps(element, ensure_ascii=False, indent=4), '\n\n')
+            #print(kanji, keys, k, v)
+            #print(json.dumps(element, ensure_ascii=False, indent=4), '\n\n')
 
         # Add the processed value to the list
         if hougai_flag:

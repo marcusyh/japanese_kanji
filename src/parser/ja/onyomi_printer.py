@@ -5,8 +5,8 @@ def get_default_param(func, param_name, default_value):
     return inspect.signature(func).parameters.get(param_name, inspect.Parameter.empty).default or default_value
 
 
-def generate_headers(show_old_pron):
-    headers = ["order"]
+def generate_headers(show_old_pron, include_all_prons):
+    headers = ["order", "all"] if include_all_prons else ["order"]
     for reading_type in ['呉音', '漢音', '慣用音', '宋唐音', '古音']:
         headers.append(reading_type)
         if show_old_pron:
@@ -57,10 +57,11 @@ def print_all_kanji_info(
         merged_kanji_info: Dict[str, Any], 
         filename: str = None, 
         markdown_flag: bool = True, 
-        show_old_pron: bool = True
+        show_old_pron: bool = True,
+        include_all_prons: bool = False
     ):
     # Generate headers
-    headers = generate_headers(show_old_pron)
+    headers = generate_headers(show_old_pron, include_all_prons)
     
     # Process kanji data
     rows = convert_to_rows(merged_kanji_info, headers)

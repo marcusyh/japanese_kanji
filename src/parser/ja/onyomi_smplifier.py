@@ -1,21 +1,21 @@
 from typing import Dict, List, Any, Tuple, Set
 from collections import defaultdict
 
-def get_sorting_keys(kanji_info: Dict[str, Any], include_hyogai: bool) -> tuple:
-    """
-    Generate sorting keys for a kanji based on its reading information.
 
-    This function processes the kanji's reading information and creates a tuple of sorted readings
-    that can be used as a key for sorting kanji. It considers different types of readings (呉音, 漢音, etc.)
-    and can optionally include both 表内 (standard) and 表外 (non-standard) readings.
+def simplify_onyomi(kanji_info: Dict[str, Any], include_hyogai: bool = False) -> Dict[str, Any]:
+    """
+    Simplifies the onyomi (音読み) information for a kanji.
+
+    This function takes a complex dictionary of kanji reading information and simplifies it
+    into a more manageable structure. It consolidates readings across different categories
+    and types into sets, making it easier to process and compare kanji readings.
 
     Args:
-        kanji_info (Dict[str, Any]): A dictionary containing the kanji's reading information.
-        include_hyogai (bool): If True, include both 表内 and 表外 readings. If False, only include 表内 readings.
+        kanji_info (Dict[str, Any]): A dictionary containing detailed onyomi information for a kanji.
+        include_hyogai (bool, optional): If True, include both 表内 and 表外 readings. Defaults to False.
 
     Returns:
-        tuple: A tuple of four sorted tuples, where each inner tuple contains sorted readings for a specific reading type
-               (呉音, 漢音, 宋唐音, 慣用音). If a reading type has no readings, its corresponding tuple will be empty.
+        Dict[str, Any]: A simplified dictionary of kanji reading information.
 
     Example:
         Input:
@@ -31,43 +31,32 @@ def get_sorting_keys(kanji_info: Dict[str, Any], include_hyogai: bool) -> tuple:
         include_hyogai = True
 
         Output:
-        (('キョウ', 'コウ', 'ギョウ'), ('キョウ', 'コウ'), (), ())
+        {
+            'pron': {'キョウ', 'コウ', 'ギョウ'}
+        }
 
-    Note:
-        The order of reading types is predefined as ['呉音', '漢音', '宋唐音', '慣用音'].
-        All four reading types are always included in the final tuple, even if some are empty.
+        If include_hyogai = False:
+        {
+            'pron': {'キョウ', 'コウ'}
+        }
     """
-    # Define the order of reading types to be considered
-    reading_types_order = ['呉音', '漢音', '宋唐音', '慣用音']
+    # Initialize the new simplified kanji info dictionary
+    new_kanji_info = {'pron': set(), 'old': set()}
     
-    # Determine which categories to include based on the include_hyogai flag
-    categories = ['表内', '表外'] if include_hyogai else ['表内']
-
-    # Initialize a dictionary to store sets of readings for each reading type
-    reading_sets = {key: set() for key in reading_types_order}
-    
-    # Iterate through the kanji information
-    for reading_type, value in kanji_info.items():
-        # Skip reading types not in our predefined order
-        if reading_type not in reading_types_order:
-            continue
-        
-        # Process each category (表内 or 表外) in the reading type
-        for category, items in value.items():
-            # Skip categories we're not interested in
-            if category not in categories:
+    for categories in kanji_info.values():
+        for category, items in categories.items():
+            # Skip 表外 readings if include_hyogai is False
+            if not include_hyogai and category == '表外':
                 continue
             
-            # Add all pronunciations ('pron') to the set for this reading type
-            reading_sets[reading_type].update(item['pron'] for item in items if 'pron' in item)
-
-    # Create a tuple of sorted tuples for each reading type
-    # This ensures a consistent order of readings for each type (呉音, 漢音, 慣用音, 宋唐音)
-    sorted_readings = tuple(tuple(sorted(reading_sets[key])) for key in reading_types_order)
+            for item in items:
+                for pron_key, pron_value in item.items():
+                    # Simplify the pronunciation key to either 'pron' or 'old'
+                    simplified_key = 'pron' if pron_key == 'pron' else 'old'
+                    new_kanji_info[simplified_key].add(pron_value)
     
-    # Return the sorted readings
-    # This tuple can be used as a key for sorting kanji based on their readings
-    return sorted_readings
+    # Remove empty sets
+    return {k: v for k, v in new_kanji_info.items() if v}
 
 
 def sort_kanji(kanji_data: Dict[str, Any], include_hyogai: bool = False) -> List[str]:
