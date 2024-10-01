@@ -148,11 +148,9 @@ class WikiCache:
     def _load_patch(self):
         if not os.path.isfile(self.patch_path):
             return {}
-        patch = {}
         with open(self.patch_path, 'r') as file:
-            for line in file:
-                line = json.loads(line)
-                patch.update(line)
+            patch = json.load(file)
+            print(patch)
         return patch
 
 
