@@ -1,6 +1,6 @@
 
 import copy
-from wiktionary.utils import parsing_pron_arch_build_tree
+from parser.utils import parsing_pron_arch_build_tree
 
 
 def create_hierarchical_tree(pron):

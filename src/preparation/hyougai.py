@@ -1,4 +1,4 @@
-from kanji.file_reader import readfile
+from file_util import readfile
 
 def deal_weblio(source, appendix):
     """
@@ -30,7 +30,7 @@ def deal_weblio(source, appendix):
 
     return kanji_set
 
-def load_hyougai(appendix = ''):
+def load_hyougai(data_root_dir, appendix = ''):
     """
     Returns: 
         {
@@ -38,7 +38,4 @@ def load_hyougai(appendix = ''):
         '蛙': {'ア': ''},
         ...
     """
-    return deal_weblio(readfile('kanji/ひょうがいかんじじたいひょう'), appendix)
-
-if __name__ == '__main__':
-    hougai = load_hyougai()
+    return deal_weblio(readfile(f'{data_root_dir}/ひょうがいかんじじたいひょう'), appendix)

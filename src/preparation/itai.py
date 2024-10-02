@@ -1,4 +1,4 @@
-from kanji.file_reader import readfile
+from file_util import readfile
 
 def deal_itai(source, appendix):
     """
@@ -31,7 +31,7 @@ def deal_itai(source, appendix):
 
     return kanji_set
 
-def load_itai(appendix = ''):
+def load_itai(data_root_dir, appendix = ''):
     """
     Returns:
         {
@@ -41,9 +41,4 @@ def load_itai(appendix = ''):
             ....
         }
     """
-    return deal_itai(readfile('kanji/いたいじ'), appendix)
-
-
-
-if __name__ == '__main__':
-    itai = load_itai()
+    return deal_itai(readfile(f'{data_root_dir}/いたいじ'), appendix)

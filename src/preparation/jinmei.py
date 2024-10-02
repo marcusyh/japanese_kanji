@@ -1,4 +1,4 @@
-from kanji.file_reader import readfile
+from file_util import readfile
 
 def deal_jinmei(source, appendix):
     """
@@ -29,7 +29,7 @@ def deal_jinmei(source, appendix):
 
     return kanji_set
 
-def load_jinmei(appendix = ''):
+def load_jinmei(data_root_dir, appendix = ''):
     """
     Returns:
         {
@@ -39,8 +39,4 @@ def load_jinmei(appendix = ''):
             ....
         }
     """
-    return deal_jinmei(readfile('kanji/じんめいじょうようかんじひょう'), appendix)
-
-
-if __name__ == '__main__':
-    jinmei = load_jinmei()
+    return deal_jinmei(readfile(f'{data_root_dir}/じんめいじょうようかんじひょう'), appendix)

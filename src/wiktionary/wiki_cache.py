@@ -1,4 +1,5 @@
 import json
+import shutil
 import os
 from wiktionary.remote_agent import Agent
 
@@ -19,11 +20,9 @@ class WikiCache:
         update: Refreshes the cached data for the existing kanji entries in `wiki
         fetch: Fetches the data for a list of kanji characters using the Agent and updates the cache.
     """
-    def __init__(self):
-        self.cache_path = '../data/wiktionary/cache.txt'
-        self.patch_path = '../data/wiktionary/patch.txt'
+    def __init__(self, cache_path):
+        self.cache_path = cache_path
         self.agent = None
-        self.patch = self._load_patch()
         self.wiki_dict = self._load()
 
 
@@ -45,16 +44,9 @@ class WikiCache:
                 wiki_dict[key] = values
         return wiki_dict
 
-    def _load_patch(self):
-        if not os.path.isfile(self.patch_path):
-            return {}
-        with open(self.patch_path, 'r') as file:
-            patch = json.load(file)
-            #print(patch)
-        return patch
-
 
     def _save(self):
+        shutil.copy(self.cache_path, self.cache_path + '.bak')
         with open(self.cache_path, 'w') as file:
             for k, v in self.wiki_dict.items():
                 v = [x.replace('\t', '') for x in v]
@@ -76,8 +68,22 @@ class WikiCache:
             if count % 10 == 0:
                 print(f'{count} fetched.')
         self._save()
+        
 
+    def cache_info(self):
+        if not os.path.isfile(self.cache_path):
+            return None
 
-if __name__ == '__main__':
-    wc = WikiCache()
-    wc.update()
+        kanji_list = []
+        with open(self.cache_path, 'r') as file:
+            for line in file:
+                kanji = line.split('\t')[0]
+                kanji_list.append(kanji)
+                
+        file_info = os.stat(self.cache_path)
+        return {
+            'kanji_count': len(kanji_list),
+            'kanji_list': kanji_list,
+            'file_size': file_info.st_size,
+            'update_time': file_info.st_mtime
+        }

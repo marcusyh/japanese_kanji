@@ -11,7 +11,7 @@ def merge_kanji():
     hougai = read_hougai()
     itai = read_itai()
 
-from classify_data import get_classified, add_alter
+from old.classify_data import get_classified, add_alter
 from save_file import save_to_docx, save_to_csv
 
 

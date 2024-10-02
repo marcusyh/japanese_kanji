@@ -1,4 +1,5 @@
 import os
+import sys
 import docx
 
 def convert_to_writable(kanji_dict):
@@ -38,6 +39,51 @@ def convert_to_writable(kanji_dict):
 
     # Return the transformed/writable dictionary.
     return writable
+
+
+def prepare_directory(filepath):
+    directory = os.path.dirname(filepath)
+
+    # Check if directory exists, create if it doesn't
+    if not os.path.exists(directory):
+        os.makedirs(directory)
+        print(f"Created directory: {directory}")
+ 
+
+def prepare_output_path(filepath):
+    prepare_directory(filepath)
+
+    filename = os.path.basename(filepath)
+    # Check if file exists
+    if os.path.exists(filepath):
+        while True:
+            user_input = input(f"File {filename} already exists. Delete and continue? (y/n): ").lower()
+            if user_input == 'y':
+                os.remove(filepath)
+                print(f"Deleted existing file: {filepath}")
+                break
+            elif user_input == 'n':
+                print("Exiting program.")
+                sys.exit(0)
+            else:
+                print("Invalid input. Please enter 'y' or 'n'.")
+    
+    return filepath
+
+
+def readfile(dirname):
+    data = []
+    for f in os.listdir(dirname):
+        fpath = os.path.join(dirname, f)
+        if not os.path.isfile(fpath):
+            continue
+        h = open(fpath, 'r')
+        for i in h.readlines():
+            if i.strip() == '':
+                continue
+            data.append(i.strip())
+        h.close()
+    return data
 
 
 def save_to_docx(sets, filename, header, filepath):
@@ -94,10 +140,12 @@ def save_to_docx_old(sets, filename, filepath):
     doc.save('%s/%s.docx' %(filepath, filename))
 
 
-def save_to_csv(sets, filename, filepath):
-    h = open('%s/%s.csv' %(filepath, filename), 'w')
-    h.write('%s, 漢字\n' %filename)
-    for a in sorted(sets.keys()):
-        h.write(a + ',' + '、'.join(sets[a].keys()) + '\n')
-    h.close()
+def save_to_csv(sets, filepath):
+    filepath = prepare_output_path(filepath)
+
+    with open(filepath, 'w') as h:
+        h.write('漢字, 読み\n')
+        for a in sorted(sets.keys()):
+            yomi = '、'.join(sets[a].keys())
+            h.write(f'{a}, {yomi}\n')
 

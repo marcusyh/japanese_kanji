@@ -2,7 +2,7 @@ from source.read_jouyou import read_jouyou
 from source.read_jinmei import read_jinmei
 from source.read_hougai import read_hougai
 from source.read_itai import read_itai
-from save_file import save_to_docx
+from file_util import save_to_docx
 
 
 def _reorgnize(*args):

@@ -1,4 +1,4 @@
-from wiktionary.cache import WikiCache
+from wiktionary.wiki_cache import WikiCache
 
 # Object represent the wiktionry.org, and map it as a dictionary in local.
 

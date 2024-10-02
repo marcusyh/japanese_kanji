@@ -1,7 +1,6 @@
-from wiktionary.cache import WikiCache
-from wiktionary.utils import split_groups
+from wiktionary.wiki_cache import WikiCache
+from parser.utils import split_groups
 from wiktionary.ja.pron_arch import parse_pron_arch
-from wiktionary.ja.onyomi import process_onyomi
 
 
 def select_ja_pronucation(wikitionary):

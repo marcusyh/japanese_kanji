@@ -1,5 +1,7 @@
 import argparse
-from wiktionary.ja.args import add_onyomi_args
+from preparation.args import regist_preparation
+from wiktionary.args import regist_wiktionary
+#from parser.args import add_parser_args
 #from wiktionary.ja.kunyomi_args import register_kunyomi
 #from wiktionary.zh.args import register_chinese
 
@@ -16,9 +18,15 @@ def cmdargs_parser():
     # sub-command as key, list of functions as value
     # a sub-command: [sub-command-dealer functions list] dictionary will be returned after register_*() called
     function_register = {}
+    
+    # register sub-command: prepare
+    function_register.update(regist_preparation(subparsers))
 
-    # register sub-command: onyomi
-    function_register.update(add_onyomi_args(subparsers))
+    # register sub-command: wiktionary
+    function_register.update(regist_wiktionary(subparsers))
+
+    # register sub-command: parser
+    #function_register.update(add_parser_args(subparsers))
     
     # register sub-command: kunyomi
     #function_register.update(register_kunyomi(subparsers))

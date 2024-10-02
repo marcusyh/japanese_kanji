@@ -1,6 +1,6 @@
 import sys
 from source.source import  get_source
-from wiktionary.wikt import get_yomi 
+from old.wikt import get_yomi 
 
 
 if __name__ == '__main__':

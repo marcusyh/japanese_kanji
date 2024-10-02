@@ -1,5 +1,5 @@
 import os
-from kanji.file_reader import readfile
+from file_util import readfile
 
 def deal_joyokanji(source, appendix):
     # Initialize an empty dictionary to store the kanji characters and their readings
@@ -57,7 +57,7 @@ def deal_joyokanji(source, appendix):
 
 
 
-def load_jouyou(appendix = ''):
+def load_jouyou(data_root_dir, appendix = ''):
     """
     Returns:
         {
@@ -70,7 +70,4 @@ def load_jouyou(appendix = ''):
             ...
         }
     """
-    return deal_joyokanji(readfile('kanji/じょうようかんじひょう'), appendix)
-
-if __name__ == '__main__':
-    jouyou = load_jouyou()
+    return deal_joyokanji(readfile(f'{data_root_dir}/じょうようかんじひょう'), appendix)
