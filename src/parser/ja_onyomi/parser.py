@@ -1,5 +1,4 @@
 import re
-import json
 
 # Dictionary of all special cases where each key is a kanji and the value is the modified 'element'
 onyomi_special_cases = {
@@ -391,7 +390,7 @@ def parse_values_structure(kanji, values):
 
 
 
-def parse_onyomi(kanji, pron_arch):
+def parse_onyomi_for_single_kanji(kanji, pron_arch):
     """
     Parses and organizes the '音読み' (On'yomi) readings of a given kanji from its pronunciation architecture.
 
@@ -520,3 +519,26 @@ def parse_onyomi(kanji, pron_arch):
         
     return sub_kanji_onyomi
         
+
+
+def parse_onyomi(pron_arch_dict):
+    """
+    Parse the onyomi information from the pronunciation architecture dictionary.
+
+    This function takes a dictionary of pronunciation architectures and parses the onyomi information
+    for each kanji. It returns a dictionary of onyomi information and a dictionary of all the keys found.
+
+    Args:
+        pron_arch_dict (dict): A dictionary where keys are kanji characters and values are lists of strings
+    """
+    onyomi_dict, all_onyomi_keys = {}, {}
+
+    for kanji, pron_arch in pron_arch_dict.items():
+        single = parse_onyomi_for_single_kanji(kanji, pron_arch)
+        onyomi_dict.update(single)
+        
+        for value in single.values():
+            for key in value:
+                all_onyomi_keys[key] = all_onyomi_keys.get(key, 0) + 1
+ 
+    return onyomi_dict, all_onyomi_keys

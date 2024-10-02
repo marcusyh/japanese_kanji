@@ -1,5 +1,5 @@
 from wiktionary.wiki_cache import WikiCache
-from parser.utils import split_groups
+from parser.common.utils import split_groups
 from wiktionary.ja.pron_arch import parse_pron_arch
 
 

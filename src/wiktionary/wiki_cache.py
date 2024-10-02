@@ -20,19 +20,23 @@ class WikiCache:
         update: Refreshes the cached data for the existing kanji entries in `wiki
         fetch: Fetches the data for a list of kanji characters using the Agent and updates the cache.
     """
-    def __init__(self, cache_path):
-        self.cache_path = cache_path
+    def __init__(self, cache_dir):
+        self.cache_path = os.path.join(cache_dir, 'cache.txt')
+        self.patch_path = os.path.join(cache_dir, 'patch.txt')
         self.agent = None
-        self.wiki_dict = self._load()
+        self.patch = self._load_patch()
+        self.wiki_dict = self._load_cache()
 
 
-    def _create_agent(self):
-        if not self.agent:
-            self.agent = Agent()
-        return self.agent
+    def _load_patch(self):
+        if not os.path.isfile(self.patch_path):
+            return {}
+        with open(self.patch_path, 'r') as file:
+            patch = json.load(file)
+        return patch
 
 
-    def _load(self):
+    def _load_cache(self):
         if not os.path.isfile(self.cache_path):
             return {}
         wiki_dict = {}
@@ -58,6 +62,12 @@ class WikiCache:
 
     def update(self):
         self.fetch(list(self.wiki_dict.keys()))
+
+
+    def _create_agent(self):
+        if not self.agent:
+            self.agent = Agent()
+        return self.agent
 
 
     def fetch(self, kanji_list):

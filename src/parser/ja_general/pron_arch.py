@@ -1,6 +1,7 @@
 
 import copy
-from parser.utils import parsing_pron_arch_build_tree
+from parser.common.utils import parsing_pron_arch_build_tree
+from parser.ja_general.filter import select_ja_pronucation
 
 
 def create_hierarchical_tree(pron):
@@ -214,3 +215,17 @@ def parse_pron_arch(pron):
 
     # Return the final architecture tree derived from pronunciation data
     return arch_tree
+
+
+
+def create_ja_pron_arch(wiki_dict):
+    """
+        Create pronunciation architecture for each kanji
+    """
+    pron_arch_all = {}
+    for kanji, details in wiki_dict.items():
+        pron_text = select_ja_pronucation(details)
+        pron_arch = parse_pron_arch(pron_text)
+        pron_arch_all[kanji] = pron_arch
+        
+    return pron_arch_all

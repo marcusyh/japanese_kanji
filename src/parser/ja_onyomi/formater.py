@@ -264,7 +264,7 @@ def merge_kanji_info(
     return merged
 
 
-def convert_to_merged_dict(
+def merge_onyomi_groups(
         info: Dict[str, Any],
         include_hyogai: bool = False,
         include_all_prons: bool = False

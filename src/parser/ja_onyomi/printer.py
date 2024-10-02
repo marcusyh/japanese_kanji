@@ -53,7 +53,7 @@ def genrate_csv(headers, rows, filename):
 
 
 
-def print_all_kanji_info(
+def output_onyomi_info(
         merged_kanji_info: Dict[str, Any], 
         filename: str = None, 
         markdown_flag: bool = True, 
