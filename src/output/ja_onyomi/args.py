@@ -1,14 +1,6 @@
 import argparse
 from output.ja_onyomi import output_ja_onyomi
 
-def boolean_arg(value):
-    if value.lower() in ('yes', 'true', 't', 'y', '1'):
-        return True
-    elif value.lower() in ('no', 'false', 'f', 'n', '0'):
-        return False
-    else:
-        raise argparse.ArgumentTypeError(f"Boolean value expected, got: {value}")
-
 def add_onyomi_args(sub_parsers):
     onyomi_parser = sub_parsers.add_parser(
         'onyomi',
@@ -24,42 +16,38 @@ def add_onyomi_args(sub_parsers):
     )
     onyomi_parser.add_argument(
         '-y', '--include_hyogai',
-        type=boolean_arg,
-        default=False,
-        help='Include hyogai kanji in the output. (default: False)'
+        action='store_true',
+        help='Include hyogai kanji in the output. By default, include only the 表内 pronunciation.'
     )
     onyomi_parser.add_argument(
         '-o', '--show_old_pron',
-        type=boolean_arg,
-        default=False,
-        help='Show old pronunciations in the output. (default: False)'
-    )
-    onyomi_parser.add_argument(
-        '-a', '--include_all_prons',
-        type=boolean_arg,
-        default=False,
-        help='Include all pronunciations in the output. (default: False)'
+        action='store_true',
+        help='Show old Jpanese pronunciations in the output. By default, show only the modern Japanese pronunciation.'
     )
     onyomi_parser.add_argument(
         '-d', '--duplicate_by_all',
-        type=boolean_arg,
-        default=False,
-        help='Duplicate entries by all pronunciations. (default: False)'
+        action='store_true',
+        help='Duplicate entries by all pronunciations. By default, output only one entry for each group.'
     )
     onyomi_parser.add_argument(
         '-f', '--filepath',
         type=str,
         default='../data/parsed_result/ja_onyomi.md',
-        help='Path to the output file containing onyomi data. (default: ../data/parsed_result/ja_onyomi.md)'
+        help='Path to the output file containing onyomi data. If not specified, defaults to ../data/parsed_result/ja_onyomi.md for Markdown or ../data/parsed_result/ja_onyomi.csv for CSV.'
     )
     onyomi_parser.add_argument(
-        '-m', '--is_markdown',
-        type=boolean_arg,
-        default=False,
-        help='Output in Markdown format. (default: False)'
+        '-c', '--is_csv',
+        action='store_true',
+        help='Output in CSV format when this option is specified. By default, output in Markdown format.'
     )
+
+    
+def output_onyomi_wrapper(args):
+    if args.is_csv:
+        args.filepath = args.filepath.replace('.md', '.csv')
+    output_ja_onyomi(args)
 
 
 def regist_ja_onyomi(sub_parsers):
     add_onyomi_args(sub_parsers)
-    return {'onyomi': output_ja_onyomi}
+    return {'onyomi': output_onyomi_wrapper}

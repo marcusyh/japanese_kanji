@@ -1,4 +1,5 @@
-from typing import Dict, List, Any, Tuple, Set
+from typing import Dict, List, Any, Tuple, Set, Union
+import copy
 from collections import defaultdict
 
 def get_sorting_keys(kanji_info: Dict[str, Any], include_hyogai: bool) -> tuple:
@@ -93,8 +94,7 @@ def sort_kanji(kanji_data: Dict[str, Any], include_hyogai: bool = False) -> List
 
 def group_kanji(
         kanji_data: Dict[str, Any],
-        include_hyogai: bool = False,
-        sort_by_all_prons: bool = False
+        include_hyogai: bool = False
     ) -> Dict[Tuple[Tuple[str, ...], ...], List[str]]:
     """
     Sort and merge kanji based on their reading information.
@@ -128,38 +128,26 @@ def group_kanji(
         if not info:
             continue
 
-        if sort_by_all_prons:
-            all_prons = set()
-            for value in info.values():
-                for category, items in value.items():
-                    if category == '表外' and not include_hyogai:
-                        continue
-                    for item in items:
-                        if 'pron' in item:
-                            all_prons.add(item['pron'])
-            key = sort_key = tuple(sorted(all_prons))
-            
-        else:
-            # Get sorting keys for the current kanji
-            go, kan, soto, kanyou = get_sorting_keys(info, include_hyogai)
+        # Get sorting keys for the current kanji
+        go, kan, soto, kanyou = get_sorting_keys(info, include_hyogai)
         
-            # Determine the grouping key based on available readings
-            # Priority: 呉音/漢音 > 慣用音 > 宋唐音
-            if go:
-                key = (go, kan, (), ())
-                sort_key = (go, kan)
-            elif kan:
-                key = ((), kan, (), ())
-                sort_key = (kan, ())
-            elif soto:
-                key = ((), (), soto, ())
-                sort_key = (soto,())
-            elif kanyou:
-                key = ((), (), (), kanyou)
-                sort_key = (kanyou, ())
-            else:
-                key = ((), (), (), ())
-                sort_key = ((), ())
+        # Determine the grouping key based on available readings
+        # Priority: 呉音/漢音 > 慣用音 > 宋唐音
+        if go:
+            key = (go, kan, (), ())
+            sort_key = (go, kan)
+        elif kan:
+            key = ((), kan, (), ())
+            sort_key = (kan, ())
+        elif soto:
+            key = ((), (), soto, ())
+            sort_key = (soto,())
+        elif kanyou:
+            key = ((), (), (), kanyou)
+            sort_key = (kanyou, ())
+        else:
+            key = ((), (), (), ())
+            sort_key = ((), ())
 
         if key not in kanji_groups:
             kanji_groups[key] = [sort_key, [kanji]]
@@ -173,9 +161,8 @@ def group_kanji(
 def merge_kanji_info(
         kanji_list: List[str], 
         info: Dict[str, Any], 
-        all_prons: Tuple[str, ...] = None, 
         include_hyogai: bool = False
-    ) -> Dict[str, List[str]]:
+    ) -> Tuple[Dict[str, List[str]], Set[str]]:
     """
     Merge information for a list of kanji characters.
 
@@ -211,14 +198,14 @@ def merge_kanji_info(
 
         Output:
         {
-            '呉音_pron': {'アイウ'},
-            '呉音pron_old': {'エオカ', 'テトナ'},
-            '漢音_pron': {'アイウ'},
-            '漢音pron_old': {'キクケ', 'ニヌネ'},
-            '慣用音_pron': {'アイウ'},
-            '慣用音pron_old': {'コサシ', 'ノハヒ'},
-            '宋唐音_pron': {'スセソ(日)'},
-            '宋唐音pron_old': {'タチツ'}
+            '呉音': {'アイウ'},
+            '呉音_old': {'エオカ', 'テトナ'},
+            '漢音': {'アイウ'},
+            '漢音_old': {'キクケ', 'ニヌネ'},
+            '慣用音': {'アイウ'},
+            '慣用音_old': {'コサシ', 'ノハヒ'},
+            '宋唐音': {'スセソ(日)'},
+            '宋唐音_old': {'タチツ'}
         }
     """
     # List of reading types that don't require kanji specification in output
@@ -226,9 +213,9 @@ def merge_kanji_info(
     
     merged = {
         "漢字": kanji_list,
-        "all": all_prons if all_prons else ""
     }
 
+    all_prons = set()
     for kanji in kanji_list:
         for reading_type, v in info[kanji].items():
             for category, items in v.items():
@@ -238,7 +225,11 @@ def merge_kanji_info(
                 for item in items:
                     for pron, yomi in item.items():
                         # Determine the key based on whether it's a current or old pronunciation
-                        key = reading_type if pron == 'pron' else f'{reading_type}_old'
+                        if pron == 'pron':
+                            key = reading_type
+                            all_prons.add(yomi)
+                        else:
+                            key = f'{reading_type}_old'
                         
                         # Initialize set for this key if it doesn't exist
                         if key not in merged:
@@ -249,7 +240,7 @@ def merge_kanji_info(
                         merged[key][yomi].append(kanji)
                         
     for reading_type, item in merged.items():
-        if reading_type in ['漢字', 'all']:
+        if reading_type == '漢字':
             continue
         # Add pronunciation to set, with kanji specification for certain reading types
         if reading_type.endswith('_old') or reading_type in group_key_list or len(merged['漢字']) == 1:
@@ -261,80 +252,147 @@ def merge_kanji_info(
                 new_yomis.append(f'{yomi}({"、".join(kanji_list)})')
             merged[reading_type] = new_yomis
                         
-    return merged
+    return merged, all_prons
 
 
 def merge_onyomi_groups(
+        kanji_groups: Dict[str, Any],
         info: Dict[str, Any],
         include_hyogai: bool = False,
-        include_all_prons: bool = False
-    ) -> Dict[str, Dict[str, Set[str]]]:
+    ) -> Dict[str, List[Union[str, Set[str], Dict[str, Any]]]]:
     """
-    Convert the input dictionary to a merged dictionary.
+    Merge and process information for kanji groups.
 
-    This function processes the input dictionary and converts it into a new dictionary
-    where each key is a group identifier and the value is a dictionary containing merged
-    information for all kanji in that group.
+    This function takes kanji groups and their detailed information, merges the information
+    for each group, and returns a new dictionary with processed data for each group.
+
+    Args:
+        kanji_groups (Dict[str, Any]): A dictionary of kanji groups, where each value is a tuple
+                                       containing a sort key and a list of kanji.
+        info (Dict[str, Any]): A dictionary containing detailed information for each kanji.
+        include_hyogai (bool, optional): Whether to include 表外 (hyōgai) readings. Defaults to False.
+
+    Returns:
+        Dict[str, List[Union[str, Set[str], Dict[str, Any]]]]: A dictionary where:
+            - Keys are the original group identifiers.
+            - Values are lists containing:
+                1. The sort key for the group
+                2. A set of all pronunciations for the group
+                3. A dictionary of merged information for all kanji in the group
+
+    Example:
+        Input kanji_groups:
+        {
+            'group1': ('sort_key1', ['亨', '享']),
+            'group2': ('sort_key2', ['亭', '停'])
+        }
+
+        Output:
+        {
+            'group1': ['sort_key1', {'キョウ', 'コウ', ...}, {...}],
+            'group2': ['sort_key2', {'テイ', 'チョウ', ...}, {...}]
+        }
+
+    Note:
+        The structure of the merged information dictionary (third element in the value list)
+        depends on the implementation of the merge_kanji_info function.
+    """ 
+    merged_groups = {}
+    for group_key, group_value in kanji_groups.items():
+        sort_key, kanji_list = group_value
+        # Merge information for all kanji in the current group
+        merged, all_prons = merge_kanji_info(kanji_list, info, include_hyogai)
+        # Store the merged information under the original group key
+        merged_groups[group_key] = [sort_key, all_prons, merged]
+        
+    return merged_groups
+
+
+
+def expand_and_sort_groups(groups: Dict[Tuple[Tuple[str, ...], ...], Any], duplicate_by_all: bool = False) -> List[Dict[str, Any]]:
+    """
+    Expand groups by pronunciations and sort them.
+
+    This function processes the input groups, expands them based on pronunciations,
+    and sorts them first by pronunciation and then by their original index.
+
+    Args:
+        groups (List[Dict[str, Any]]): A list of dictionaries, where each dictionary
+            contains a group of kanji information including pronunciations.
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries, sorted by pronunciation and original index,
+        with each pronunciation having its own entry.
+    """
+    # Create new groups, expanding each group for every pronunciation it has
+    new_groups = []
+    for index, sorted_value in enumerate(sorted(groups.items(), key=lambda x: x[1][0]), start=1):
+        group_key, group_wrapper = sorted_value
+        sort_key, all_prons, merged_group = group_wrapper
+        # Add index and sort_key to the group information
+        merged_group.update({
+            "index": index,
+            "sort_key": sort_key,
+        })
+        
+        # if not duplicate_by_all, just append the group
+        if not duplicate_by_all:
+            new_groups.append(merged_group)
+            continue
+        
+        # Create a new entry for each pronunciation in the group
+        for pron in all_prons:
+            output_group = copy.deepcopy(merged_group)
+            new_groups.append({
+                **output_group,
+                "onyomi": pron,
+            })
+    
+    if not duplicate_by_all:
+        return sorted(new_groups, key=lambda x: x['index'])
+    # Sort the new groups first by pronunciation, then by original index
+    return sorted(new_groups, key=lambda x: (x['onyomi'], x['index']))
+        
+
+
+def generate_onyomi_rows(
+        info: Dict[str, Any],
+        include_hyogai: bool = False,
+        duplicate_by_all: bool = False,
+    ) -> List[Dict[str, Any]]:
+    """
+    This function processes the input dictionary, groups kanji, merges information for each group,
+    and then expands and sorts the groups based on pronunciations.
 
     Args:
         info (Dict[str, Any]): The input dictionary containing detailed information for each kanji.
         include_hyogai (bool, optional): Whether to include 表外 (hyōgai) readings. Defaults to False.
+        duplicate_by_all (bool, optional): Whether to duplicate the group by all pronunciations. Defaults to False.
 
     Returns:
-        Dict[str, Dict[str, Set[str]]]: A dictionary where:
-            - Keys are the original group identifiers.
-            - Values are dictionaries returned by merge_kanji_info, containing
-              merged information for all kanji in that group.
-
-    Example:
-        Input:
-        {
-            '亨': {
-                '呉音': {
-                    '表内': [
-                        {'pron': 'キョウ', 'old_pron1': 'キャゥ'},
-                        {'pron': 'コウ', 'old_pron1': 'カゥ'},
-                        {'pron': 'ヒョウ', 'old_pron1': 'ヒャゥ'}
-                    ],
-                    '表外': [
-                        {'pron': 'XXX', 'old_pron1': 'YYY'},
-                        {'pron': 'ZZZ'},
-                    ]
-                },
-                '漢音': {
-                    '表内': [
-                        {'pron': 'コウ', 'old_pron1': 'カゥ'},
-                        {'pron': 'キョウ', 'old_pron1': 'キャゥ'},
-                        {'pron': 'ホウ', 'old_pron1': 'ハゥ'}
-                    ],
-                    '表外': [
-                        {'pron': 'XXX', 'old_pron1': 'YYY'},
-                        {'pron': 'ZZZ'},
-                    ]
-                },
-                '慣用音': {
-                    ...
-                }
-            },
-            ...
-        }
-        Sub-keys of input: ['呉音', '漢音', '慣用音', '宋唐音', '古音']
-
-    Note:
-        The output structure will depend on the input data and the merge_kanji_info function's implementation.
+        List[Dict[str, Any]]: A list of dictionaries, where each dictionary represents
+        an expanded and sorted group entry. Each entry contains merged information
+        for a group of kanji, including pronunciations and other relevant data.
+        
+    Elements of each row of the output:
+        - 'onyomi': 'アイウ'
+        - 'index': 1234
+        - 'sort_key': ('アイウ',)
+        - 'merged': Dict[str, Any]
+        - '呉音': {'アイウ'},
+        - '呉音_old': {'エオカ', 'テトナ'},
+        - '漢音': {'アイウ'},
+        - '漢音_old': {'キクケ', 'ニヌネ'},
+        - '慣用音': {'アイウ'},
+        - '慣用音_old': {'コサシ', 'ノハヒ'},
+        - '宋唐音': {'スセソ(日)'},
+        - '宋唐音_old': {'タチツ'}
     """ 
-    kanji_group = group_kanji(info, include_hyogai, sort_by_all_prons=include_all_prons)
-
-    merged_group= {}
-    for group_key, group_value in kanji_group.items():
-
-        sort_key, kanji_list = group_value
-        # Merge information for all kanji in the current group
-        merged = merge_kanji_info(kanji_list, info, sort_key, include_hyogai)
-        # Store the merged information under the original group key
-        merged_group[group_key] = [sort_key, merged]
+    # Group kanji into groups
+    kanji_groups = group_kanji(info, include_hyogai)
     
-    # Convert the merged_group dictionary to a sorted list of tuples (group_key, merged_info)
-    sorted_group = sorted(merged_group.items(), key=lambda x: x[1][0])
-
-    return [x[1][1] for x in sorted_group]
+    # Merge information for each group
+    merged_groups = merge_onyomi_groups(kanji_groups, info, include_hyogai)
+    
+    # Expand and sort the groups based on pronunciations and original order
+    return expand_and_sort_groups(merged_groups, duplicate_by_all)
