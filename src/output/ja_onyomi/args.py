@@ -1,5 +1,5 @@
 import argparse
-from parser.ja_onyomi import process_ja_onyomi
+from output.ja_onyomi import output_ja_onyomi
 
 def boolean_arg(value):
     if value.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -49,8 +49,8 @@ def add_onyomi_args(sub_parsers):
     onyomi_parser.add_argument(
         '-f', '--filepath',
         type=str,
-        default=None,
-        help='Path to the input file containing onyomi data. (default: None)'
+        default='../data/parsed_result/ja_onyomi.md',
+        help='Path to the output file containing onyomi data. (default: ../data/parsed_result/ja_onyomi.md)'
     )
     onyomi_parser.add_argument(
         '-m', '--is_markdown',
@@ -62,4 +62,4 @@ def add_onyomi_args(sub_parsers):
 
 def regist_ja_onyomi(sub_parsers):
     add_onyomi_args(sub_parsers)
-    return {'onyomi': process_ja_onyomi}
+    return {'onyomi': output_ja_onyomi}

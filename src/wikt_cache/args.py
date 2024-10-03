@@ -1,5 +1,5 @@
 import argparse
-from wiktionary import fetch_wikt_cache
+from wikt_cache import fetch_wikt_cache
 
 def boolean_arg(value):
     if value.lower() in ('yes', 'true', 't', 'y', '1'):

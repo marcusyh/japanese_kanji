@@ -1,7 +1,7 @@
 import argparse
 from preparation.args import regist_preparation
-from wiktionary.args import regist_wiktionary
-from parser.args import regist_parser
+from wikt_cache.args import regist_wiktionary
+from output.args import regist_parser
 
 def cmdargs_parser():
     parser = argparse.ArgumentParser(description="Wiktionary Japanese and Chinese tools")

@@ -1,7 +1,7 @@
 from file_util import prepare_directory
 from preparation.loader import load_local_kanji_without_tag
-from wiktionary.wiki_cache import WikiCache
-from wiktionary.ui import confirm_fetch_remote, show_kanji_list, show_brief_info
+from wikt_cache.wiki_cache import WikiCache
+from wikt_cache.ui import confirm_fetch_remote, show_kanji_list, show_brief_info
 
 
 def get_kanji_list(source_data_dir):

@@ -1,19 +1,15 @@
 
-from parser.ja_general import parse_ja
-from parser.ja_onyomi.parser import parse_onyomi
-from parser.ja_onyomi.formater import merge_onyomi_groups
-from parser.ja_onyomi.printer import output_onyomi_info
+from wikt_parser import parse_ja_onyomi
+from output.ja_onyomi.formater import merge_onyomi_groups
+from output.ja_onyomi.printer import output_onyomi_info
 
 
-def process_ja_onyomi(args):
+def output_ja_onyomi(args):
     """
     Deal with onyomi of ja
     """
-    # get pron_arch_dict
-    pron_arch_dict = parse_ja(args.wiki_cache_dir)
-
-    # parse onyomi of ja
-    onyomi_dict, all_onyomi_keys = parse_onyomi(pron_arch_dict)
+    # get onyomi_dict
+    onyomi_dict, all_onyomi_keys = parse_ja_onyomi(args.wiki_cache_dir)
 
     # merge onyomi groups
     merged_onyomi_groups = merge_onyomi_groups(onyomi_dict, args.include_hyogai, args.include_all_prons)

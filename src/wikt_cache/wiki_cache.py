@@ -1,7 +1,7 @@
 import json
 import shutil
 import os
-from wiktionary.remote_agent import Agent
+from wikt_cache.remote_agent import Agent
 
 class WikiCache:
     """

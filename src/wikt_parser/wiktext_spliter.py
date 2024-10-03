@@ -1,5 +1,4 @@
 import re
-from wiktionary.wiki_cache import WikiCache
 
 def split_groups_for_each_kanji(k, wikitext):
     """
@@ -112,11 +111,9 @@ def split_groups_for_each_kanji(k, wikitext):
 
 
 
-def split_groups(wiki_cache_dir):
-    wiki_cache = WikiCache(wiki_cache_dir)
-
+def split_groups(wiki_dict):
     kanji_dict = {}
-    for kanji, details_texts in wiki_cache.wiki_dict.items():
+    for kanji, details_texts in wiki_dict.items():
         details_groups = split_groups_for_each_kanji(kanji, details_texts[0])
         kanji_dict[kanji] = details_groups
 

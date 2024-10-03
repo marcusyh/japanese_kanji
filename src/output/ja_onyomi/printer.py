@@ -1,5 +1,6 @@
 from typing import Dict, List, Any
 import inspect
+from file_util import prepare_output_path
 
 def get_default_param(func, param_name, default_value):
     return inspect.signature(func).parameters.get(param_name, inspect.Parameter.empty).default or default_value
@@ -60,6 +61,9 @@ def output_onyomi_info(
         show_old_pron: bool = True,
         include_all_prons: bool = False
     ):
+    # makesure output path is valid and check if file exists
+    prepare_output_path(filename)
+
     # Generate headers
     headers = generate_headers(show_old_pron, include_all_prons)
     

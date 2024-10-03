@@ -1,5 +1,5 @@
 import argparse
-from parser.ja_onyomi.args import regist_ja_onyomi
+from output.ja_onyomi.args import regist_ja_onyomi
 
 def regist_parser(sub_commands):
     sub_parser = sub_commands.add_parser(
