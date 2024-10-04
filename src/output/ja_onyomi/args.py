@@ -9,15 +9,26 @@ def add_onyomi_args(sub_parsers):
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     onyomi_parser.add_argument(
-        '-w', '--wiki_cache_dir',
+        '-w', '--input_wiki_cache_dir',
         type=str,
         default='../data/wiktionary',
         help='Path to the wiki cache. (default: ../data/wiktionary)'
     )
     onyomi_parser.add_argument(
-        '-y', '--include_hyogai',
+        '-f', '--output_filepath',
+        type=str,
+        default='../data/parsed_result/ja_onyomi.md',
+        help='Path to the output file containing onyomi data. If not specified, defaults to ../data/parsed_result/ja_onyomi.md for Markdown or ../data/parsed_result/ja_onyomi.csv for CSV.'
+    )
+    onyomi_parser.add_argument(
+        '-c', '--output_is_csv',
         action='store_true',
-        help='Include hyogai kanji in the output. By default, include only the 表内 pronunciation.'
+        help='Output in CSV format when this option is specified. By default, output in Markdown format.'
+    )
+    onyomi_parser.add_argument(
+        '-y', '--merge_hyogai',
+        action='store_true',
+        help='Merge hyougai kanji to rows for group by and sort by all pronunciations. By default, hyougai pronunciations are not included.'
     )
     onyomi_parser.add_argument(
         '-o', '--show_old_pron',
@@ -25,26 +36,20 @@ def add_onyomi_args(sub_parsers):
         help='Show old Jpanese pronunciations in the output. By default, show only the modern Japanese pronunciation.'
     )
     onyomi_parser.add_argument(
-        '-d', '--duplicate_by_all',
+        '-g', '--show_hyogai',
         action='store_true',
-        help='Duplicate entries by all pronunciations. By default, output only one entry for each group.'
+        help='Show hyougai pronunciation in the additional column for reference.'
     )
     onyomi_parser.add_argument(
-        '-f', '--filepath',
-        type=str,
-        default='../data/parsed_result/ja_onyomi.md',
-        help='Path to the output file containing onyomi data. If not specified, defaults to ../data/parsed_result/ja_onyomi.md for Markdown or ../data/parsed_result/ja_onyomi.csv for CSV.'
-    )
-    onyomi_parser.add_argument(
-        '-c', '--is_csv',
+        '-d', '--show_duplicated',
         action='store_true',
-        help='Output in CSV format when this option is specified. By default, output in Markdown format.'
+        help='show all duplicate entries by all pronunciations. By default, output only one entry for each group.'
     )
 
     
 def output_onyomi_wrapper(args):
-    if args.is_csv:
-        args.filepath = args.filepath.replace('.md', '.csv')
+    if args.output_is_csv:
+        args.output_filepath = args.output_filepath.replace('.md', '.csv')
     output_ja_onyomi(args)
 
 

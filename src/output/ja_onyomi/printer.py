@@ -6,14 +6,18 @@ def get_default_param(func, param_name, default_value):
     return inspect.signature(func).parameters.get(param_name, inspect.Parameter.empty).default or default_value
 
 
-def generate_headers(show_old_pron, include_all_prons):
-    headers = ["onyomi"] if include_all_prons else []
-    for reading_type in ['呉音', '漢音', '慣用音', '宋唐音', '古音']:
+def generate_headers(duplicate_by_all, show_old_pron, show_hyogai):
+    headers = ["", "音序"] if duplicate_by_all else []
+    for reading_type in ['呉音', '漢音', '宋唐音', '慣用音']:
         headers.append(reading_type)
-        if show_old_pron:
-            headers.append(reading_type + '_old')
     headers.append('漢字')
     headers.append('index')
+    if show_hyogai:
+        for reading_type in ['呉音', '漢音', '宋唐音', '慣用音']:
+            headers.append(reading_type + '_表外')
+    if show_old_pron:
+        for reading_type in ['呉音', '漢音', '宋唐音', '慣用音']:
+            headers.append(reading_type + '_old')
     return headers
 
 
@@ -22,8 +26,10 @@ def convert_to_rows(merged_kanji_info: List[Any], headers: List[str]) -> List[Li
     for raw_row in merged_kanji_info:
         row = []
         for column in headers:
-            if column in ['index', 'onyomi']:
+            if column in ['index', '音序']:
                 row.append(str(raw_row[column]))
+            elif column == '':
+                row.append('○' if raw_row['main_row_flag'] else '')
             elif column in raw_row:
                 row.append('、'.join([p for p in raw_row[column]]))
             else:
@@ -61,14 +67,15 @@ def output_onyomi_info(
         merged_kanji_info: Dict[str, Any], 
         filename: str = None, 
         csv_flag: bool = False, 
+        show_duplicated: bool = False,
         show_old_pron: bool = True,
-        duplicate_by_all: bool = False
+        show_hyogai: bool = False,
     ):
     # makesure output path is valid and check if file exists
     prepare_output_path(filename)
 
     # Generate headers
-    headers = generate_headers(show_old_pron, duplicate_by_all)
+    headers = generate_headers(show_duplicated, show_old_pron, show_hyogai)
     
     # Process kanji data
     rows = convert_to_rows(merged_kanji_info, headers)
