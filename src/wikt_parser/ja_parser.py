@@ -2,7 +2,6 @@
 import copy
 from wikt_parser.utils import parsing_pron_arch_build_tree
 from wikt_parser.ja_filter import select_ja_pronucation
-from wikt_cache.patch import load_patch
 
 
 def create_hierarchical_tree(pron):
@@ -229,8 +228,4 @@ def create_ja_pron_arch(wiki_dict):
         pron_arch = parse_pron_arch(pron_text)
         pron_arch_all[kanji] = pron_arch
 
-    patch_pron_arch = load_patch()
-    for kanji, pron_arch in patch_pron_arch.items():
-        pron_arch_all[kanji] = pron_arch
-        
     return pron_arch_all

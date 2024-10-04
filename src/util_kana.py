@@ -1,10 +1,3 @@
-from source.read_jouyou import read_jouyou
-from source.read_jinmei import read_jinmei
-from source.read_hougai import read_hougai
-from source.read_itai import read_itai
-from file_util import save_to_docx
-
-
 def _reorgnize(*args):
     new_kanjiset = {}
     for kanji_set in args:
@@ -15,7 +8,7 @@ def _reorgnize(*args):
                 new_kanjiset[b][a] = c
     return new_kanjiset
 
-def _check_katakana_hirakana(word):
+def check_katakana_hirakana(word):
     all_hira = True
     all_kata = True
     for i in word:
@@ -28,7 +21,7 @@ def _get_result(kanji):
     kata_set = {}
     pointer = None
     for x, y in kanji.items():
-        hira, kata = _check_katakana_hirakana(x)
+        hira, kata = check_katakana_hirakana(x)
         if hira and kata or not hira and not kata:
             print(x, y)
             continue
@@ -39,13 +32,3 @@ def _get_result(kanji):
 
 def get_classified(*args):
     return _get_result(_reorgnize(*args))
-
-if __name__ == '__main__':
-    jouyou = read_jouyou()
-    hougai = read_hougai()
-    jinmei = read_jinmei()
-    itai = read_itai()
-
-    rslt = merge_kanji(jouyou, hougai, jinmei, itai)
-    wrtb = convert_to_writable(rslt)
-    

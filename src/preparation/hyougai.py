@@ -1,4 +1,4 @@
-from file_util import readfile
+from preparation.utils import readfile
 
 def deal_weblio(source, appendix):
     """

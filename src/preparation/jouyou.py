@@ -1,5 +1,7 @@
 import os
-from file_util import readfile
+from preparation.utils import readfile
+from util_kana import check_katakana_hirakana
+from typing import Dict, Any
 
 def deal_joyokanji(source, appendix):
     # Initialize an empty dictionary to store the kanji characters and their readings
@@ -54,7 +56,6 @@ def deal_joyokanji(source, appendix):
         previous = current  # Update the previous character
 
     return kanji_set  # Return the resulting dictionary
-
 
 
 def load_jouyou(data_root_dir, appendix = ''):

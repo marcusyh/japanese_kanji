@@ -447,7 +447,7 @@ def parse_onyomi_for_single_kanji(kanji, pron_arch):
         return {}
     
     # Define a mapping for key names to standardize variations
-    key_name_map = {
+    reading_type_map = {
         "宋音": "宋唐音",
         "唐音": "宋唐音",
         "唐宋音": "宋唐音",
@@ -499,12 +499,12 @@ def parse_onyomi_for_single_kanji(kanji, pron_arch):
                 continue
 
             keys, values = text.split(':')
-            key_list = [key_name_map[key] if key in key_name_map else key for key in keys.strip().split()]
+            reading_types_list = [reading_type_map[reading_type] if reading_type in reading_type_map else reading_type for reading_type in keys.strip().split()]
             values_dict = parse_values_structure(kanji, values)
             #print(kanji, key_list, values_dict)
             
-            for yomi_type_key in key_list:
-                onyomi[yomi_type_key] = values_dict
+            for reading_type in reading_types_list:
+                onyomi[reading_type] = values_dict
 
         if count_sub_kanji > 1:
             sub_kanji_key = f"{kanji}{index}"

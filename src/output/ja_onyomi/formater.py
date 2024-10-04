@@ -149,7 +149,7 @@ def group_kanji(
             group_key = ((), (), (), ())
             sort_key = ((), ())
 
-        group_key = (go, kan, soto, kanyou)
+        #group_key = (go, kan, soto, kanyou)
         if group_key not in kanji_groups:
             kanji_groups[group_key] = [sort_key, [kanji]]
         else:
@@ -255,6 +255,8 @@ def merge_kanji_info(
             for category, items in v.items():
                 for item in items:
                     for pron, yomi in item.items():
+                        if pron == 'words_list':
+                            continue
                         add_prons(category, pron, reading_type, yomi, kanji)
 
     for reading_type, item in merged.items():
