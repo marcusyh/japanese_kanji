@@ -39,6 +39,9 @@ def convert_to_rows(merged_kanji_info: List[Any], headers: List[str]) -> List[Li
 
 
 def genrate_markdown(headers, rows, filename):
+    # makesure output path is valid and check if file exists
+    prepare_output_path(filename)
+
     output = ['| ' + ' | '.join(headers) + ' |', '|' + '---|' * len(headers)]
     output.extend(['| ' + ' | '.join(row) + ' |' for row in rows])
     formatted_output = '\n'.join(output)
@@ -51,6 +54,9 @@ def genrate_markdown(headers, rows, filename):
 
 
 def genrate_csv(headers, rows, filename):
+    # makesure output path is valid and check if file exists
+    prepare_output_path(filename)
+
     output = [','.join(headers)]
     output.extend([','.join(row) for row in rows])
     formatted_output = '\n'.join(output)
@@ -66,14 +72,11 @@ def genrate_csv(headers, rows, filename):
 def output_onyomi_info(
         merged_kanji_info: Dict[str, Any], 
         filename: str = None, 
-        csv_flag: bool = False, 
+        output_format: str = 'markdown', 
         show_duplicated: bool = False,
         show_old_pron: bool = True,
         show_hyogai: bool = False,
     ):
-    # makesure output path is valid and check if file exists
-    prepare_output_path(filename)
-
     # Generate headers
     headers = generate_headers(show_duplicated, show_old_pron, show_hyogai)
     
@@ -81,12 +84,7 @@ def output_onyomi_info(
     rows = convert_to_rows(merged_kanji_info, headers)
     
     # Format and output the result
-    if csv_flag:
-        output = genrate_csv(headers, rows, filename)
+    if output_format == 'csv':
+        genrate_csv(headers, rows, filename)
     else:
-        output = genrate_markdown(headers, rows, filename)
-    
-    if not filename:
-        print(output)
-
-    return output
+        genrate_markdown(headers, rows, filename)

@@ -6,7 +6,7 @@ from wikt_parser.ja_onyomi_parser import parse_onyomi
 from wikt_parser.wikt_bugfix import fix_by_wikt_patch, merge_with_preparation
 
 
-def parse_ja_onyomi(wiki_cache_dir):
+def parse_ja_yomi(wiki_cache_dir):
     wiki_cache = WikiCache(wiki_cache_dir)
 
     # common operation for all languages, both ja and zh
@@ -22,9 +22,9 @@ def parse_ja_onyomi(wiki_cache_dir):
     fix_by_wikt_patch(wikt_onyomi_dict)
     
     # merge wikt data by patch
-    merged_wikt_onyomi_dict = merge_with_preparation(wikt_onyomi_dict)
+    kanji_yomi_dict, kanji_ydkey_map= merge_with_preparation(wikt_onyomi_dict)
     
-    return merged_wikt_onyomi_dict, wikt_all_onyomi_keys
+    return kanji_yomi_dict, kanji_ydkey_map, wikt_all_onyomi_keys
 
 
         

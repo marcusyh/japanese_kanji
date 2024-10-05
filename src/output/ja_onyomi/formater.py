@@ -149,7 +149,7 @@ def group_kanji(
             group_key = ((), (), (), ())
             sort_key = ((), ())
 
-        #group_key = (go, kan, soto, kanyou)
+        group_key = (go, kan, soto, kanyou)
         if group_key not in kanji_groups:
             kanji_groups[group_key] = [sort_key, [kanji]]
         else:
@@ -390,7 +390,7 @@ def expand_and_sort_groups(groups: Dict[Tuple[Tuple[str, ...], ...], Any], dupli
 
 
 def generate_onyomi_rows(
-        info: Dict[str, Any],
+        kanji_yomi_dict: Dict[str, Any],
         merge_hyogai: bool = False,
         show_hyogai: bool = False,
         show_duplicated: bool = False,
@@ -400,7 +400,7 @@ def generate_onyomi_rows(
     and then expands and sorts the groups based on pronunciations.
 
     Args:
-        info (Dict[str, Any]): The input dictionary containing detailed information for each kanji.
+        kanji_yomi_dict (Dict[str, Any]): The input dictionary containing detailed information for each kanji.
         merge_hyogai (bool, optional): Whether to merge 表外 (hyōgai) readings. Defaults to False.
 
     Returns:
@@ -422,6 +422,10 @@ def generate_onyomi_rows(
         - '宋唐音': {'スセソ(日)'},
         - '宋唐音_old': {'タチツ'}
     """ 
+    
+    # select only onyomi info
+    info = {key: value['ja']['音読み'] for key, value in kanji_yomi_dict.items()}
+
     # Group kanji into groups
     kanji_groups = group_kanji(info, merge_hyogai)
     

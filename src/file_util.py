@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import docx
 
 def convert_to_writable(kanji_dict):
@@ -54,12 +55,13 @@ def prepare_output_path(filepath):
     prepare_directory(filepath)
 
     filename = os.path.basename(filepath)
+
     # Check if file exists
     if os.path.exists(filepath):
         while True:
             user_input = input(f"File {filename} already exists. Delete and continue? (y/n): ").lower()
             if user_input == 'y':
-                os.remove(filepath)
+                shutil.rmtree(filepath)
                 print(f"Deleted existing file: {filepath}")
                 break
             elif user_input == 'n':
@@ -67,6 +69,9 @@ def prepare_output_path(filepath):
                 sys.exit(0)
             else:
                 print("Invalid input. Please enter 'y' or 'n'.")
+            
+    if os.path.isdir(filepath):
+        os.makedirs(filepath)
     
     return filepath
 

@@ -142,5 +142,6 @@ def load_preparation_data(
 
             # Update the mapping for all kanji in this group
             all_kanji_mapping.update({kanji: kanji_info_key for kanji in kanji_list})
+    
 
     return all_kanji_mapping, kanji_info_dict
