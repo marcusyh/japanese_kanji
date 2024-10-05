@@ -1,6 +1,8 @@
-export async function fetchMarkdown() {
+export async function fetchMarkdown(filename) {
+    // 移除可能的锚点
+    const cleanFilename = filename.split('#')[0];
     const timestamp = new Date().getTime();
-    const response = await fetch(`data/ja_onyomi.md?t=${timestamp}`, {
+    const response = await fetch(`data/${cleanFilename}?t=${timestamp}`, {
         headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',

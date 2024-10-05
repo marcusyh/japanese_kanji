@@ -1,9 +1,10 @@
 let previousPosition = 0;
 
 export function setupEventListeners(tableContainer) {
-    tableContainer.addEventListener('click', handleTableClick);
     document.getElementById('back-to-home').addEventListener('click', handleBackToHomeClick);
+    document.getElementById('back-to-top').addEventListener('click', handleBackToTopClick);
     document.getElementById('back-to-previous').addEventListener('click', handleBackToPreviousClick);
+    tableContainer.addEventListener('click', handleTableClick);
 }
 
 function handleTableClick(e) {
@@ -11,16 +12,17 @@ function handleTableClick(e) {
         e.preventDefault();
         previousPosition = window.scrollY;
         const href = e.target.getAttribute('href');
-        const targetElement = document.querySelector(href);
-        if (targetElement) {
-            targetElement.scrollIntoView({
-                behavior: 'smooth'
-            });
-        }
+        window.location.hash = href.slice(1); // 这会触发 hashchange 事件
     }
 }
 
 function handleBackToHomeClick(e) {
+    e.preventDefault();
+    window.location.hash = ''; // 清除 hash
+    window.dispatchEvent(new HashChangeEvent('hashchange')); // 手动触发 hashchange 事件
+}
+
+function handleBackToTopClick(e) {
     e.preventDefault();
     previousPosition = window.scrollY;
     window.scrollTo({

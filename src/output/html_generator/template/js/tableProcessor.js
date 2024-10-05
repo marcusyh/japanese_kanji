@@ -61,8 +61,9 @@ function processRowContents(rows, kanjiColumnIndex, indexColumnIndex, headerText
 function processIndexCell(firstCell, indexCell) {
     const index = indexCell.textContent.trim();
     if (firstCell.textContent.trim() !== '○') {
-        indexCell.innerHTML = `<a href="#anchor-${index}" class="index-link">${index}</a>`;
-        console.log(`Created link for row: #anchor-${index}`);
+        const currentFilename = window.location.hash.slice(1).split('#')[0];
+        indexCell.innerHTML = `<a href="#${currentFilename}#${index}" class="index-link">${index}</a>`;
+        console.log(`Created link for row: #${currentFilename}#${index}`);
     } else {
         indexCell.innerHTML = index;
     }
