@@ -3,7 +3,7 @@ from output.ja_onyomi import output_ja_onyomi
 
 markdown_path = '../data/parsed_result/markdown/ja_onyomi.md'
 csv_path = '../data/parsed_result/csv/ja_onyomi.csv'
-html_path = '../data/parsed_result/html/data/ja_onyomi.md'
+html_path = '../data/parsed_result/html/data/日本語_音読み表.md'
 
 def add_onyomi_args(sub_parsers):
     onyomi_parser = sub_parsers.add_parser(

@@ -304,7 +304,9 @@ def merge_with_preparation(wikt_onyomi_dict, add_mark_flag=True):
         merged_kanji_dict[new_key] = {
             "ja": {
                 "音読み": fixed_onyomi_info,
-                "訓読み": kunyomi_info
+                "訓読み": {
+                    "訓読み": kunyomi_info
+                }
             }
         }
 

@@ -1,24 +1,10 @@
 from typing import Dict, List, Any
 import inspect
 from file_util import prepare_output_path
+from output.html_generator import generate_html
 
 def get_default_param(func, param_name, default_value):
     return inspect.signature(func).parameters.get(param_name, inspect.Parameter.empty).default or default_value
-
-
-def generate_headers(duplicate_by_all, show_old_pron, show_hyogai):
-    headers = ["", "音序"] if duplicate_by_all else []
-    for reading_type in ['呉音', '漢音', '宋唐音', '慣用音']:
-        headers.append(reading_type)
-    headers.append('漢字')
-    headers.append('index')
-    if show_hyogai:
-        for reading_type in ['呉音', '漢音', '宋唐音', '慣用音']:
-            headers.append(reading_type + '_表外')
-    if show_old_pron:
-        for reading_type in ['呉音', '漢音', '宋唐音', '慣用音']:
-            headers.append(reading_type + '_old')
-    return headers
 
 
 def convert_to_rows(merged_kanji_info: List[Any], headers: List[str]) -> List[List[str]]:
@@ -68,23 +54,25 @@ def genrate_csv(headers, rows, filename):
     return formatted_output
 
 
-
-def output_onyomi_info(
+def output_yomi_info(
+        kanji_yomi_dict: Dict[str, Any],
+        kanji_ydkey_map: Dict[str, Any],
         merged_kanji_info: Dict[str, Any], 
         filename: str = None, 
         output_format: str = 'markdown', 
-        show_duplicated: bool = False,
-        show_old_pron: bool = True,
-        show_hyogai: bool = False,
+        headers: List[str] = None,
     ):
-    # Generate headers
-    headers = generate_headers(show_duplicated, show_old_pron, show_hyogai)
-    
+
     # Process kanji data
     rows = convert_to_rows(merged_kanji_info, headers)
     
     # Format and output the result
     if output_format == 'csv':
         genrate_csv(headers, rows, filename)
-    else:
+    elif output_format == 'markdown':
         genrate_markdown(headers, rows, filename)
+    elif output_format == 'html':
+        generate_html(filename, kanji_yomi_dict, kanji_ydkey_map)
+        genrate_markdown(headers, rows, filename)
+    else:
+        raise ValueError(f'Invalid output format: {output_format}')

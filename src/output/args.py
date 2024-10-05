@@ -1,5 +1,6 @@
 import argparse
 from output.ja_onyomi.args import regist_ja_onyomi
+from output.ja_kunyomi.args import regist_ja_kunyomi
 
 def regist_parser(sub_commands):
     sub_parser = sub_commands.add_parser(
@@ -13,5 +14,6 @@ def regist_parser(sub_commands):
     register = {}
     
     register.update(regist_ja_onyomi(third_level_parser))
+    register.update(regist_ja_kunyomi(third_level_parser))
 
     return register
