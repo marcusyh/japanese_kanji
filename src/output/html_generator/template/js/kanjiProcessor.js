@@ -1,7 +1,7 @@
 export function processKanjiCell(kanjiCell, kanjiInfo) {
     //console.log("Processing kanji cell:", kanjiCell.textContent);
     const kanji = kanjiCell.textContent.trim().split('、');
-    kanjiCell.innerHTML = kanji.map(k => `<span class="kanji">${k}</span>`).join('、');
+    kanjiCell.innerHTML = kanji.map(k => `<span class="kanji" data-kanji="${k}">${k}</span>`).join('、');
     //console.log("Processed kanji cell:", kanjiCell.innerHTML);
     kanjiCell.addEventListener('mousemove', handleKanjiMouseMove);
 }

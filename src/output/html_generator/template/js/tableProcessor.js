@@ -1,4 +1,8 @@
 import { processKanjiCell, processReadingCell } from './kanjiProcessor.js';
+import { setupEventListeners } from './eventHandlers.js';
+import { fetchMarkdown, fetchKanjiInfo } from './dataFetcher.js';
+import { initializeTippy } from './tippyInitializer.js';
+import { handleError } from './utils.js';
 
 export function renderTable(html, tableContainer) {
     tableContainer.innerHTML = html;
@@ -6,6 +10,7 @@ export function renderTable(html, tableContainer) {
 }
 
 export function processTable(tableContainer, kanjiInfo) {
+    console.time('processTable');
     const table = tableContainer.querySelector('table');
     if (table) {
         const headers = table.querySelectorAll('th');
@@ -16,12 +21,15 @@ export function processTable(tableContainer, kanjiInfo) {
     } else {
         console.error("No table found in the parsed HTML");
     }
+    console.timeEnd('processTable');
 }
 
 function processTableRows(table, kanjiColumnIndex, indexColumnIndex, headerTexts, kanjiInfo) {
+    console.time('processTableRows');
     const rows = table.querySelectorAll('tr');
     setAnchors(rows, indexColumnIndex);
     processRowContents(rows, kanjiColumnIndex, indexColumnIndex, headerTexts, kanjiInfo);
+    console.timeEnd('processTableRows');
 }
 
 function setAnchors(rows, indexColumnIndex) {
@@ -67,4 +75,55 @@ function processIndexCell(firstCell, indexCell) {
     } else {
         indexCell.innerHTML = index;
     }
+}
+
+
+export async function loadMarkdownTable(filename, anchor, tableContainer, kanjiInfo) {
+    console.time('loadMarkdownTable');
+    try {
+        console.time('fetchData');
+        const [markdown, kanjiData] = await Promise.all([
+            fetchMarkdown(filename),
+            fetchKanjiInfo()
+        ]);
+        console.timeEnd('fetchData');
+
+        kanjiInfo = kanjiData;
+        console.log("Kanji info loaded:", Object.keys(kanjiInfo).length);
+
+        console.time('parseMarkdown');
+        const html = marked.parse(markdown);
+        console.timeEnd('parseMarkdown');
+
+        console.time('renderTable');
+        renderTable(html, tableContainer);
+        console.timeEnd('renderTable');
+
+        console.time('processTable');
+        await processTable(tableContainer, kanjiInfo);
+        console.timeEnd('processTable');
+
+        console.log("Table processing complete, initializing Tippy");
+        setTimeout(() => {
+            console.time('initializeTippy');
+            initializeTippy(kanjiInfo);
+            console.timeEnd('initializeTippy');
+
+            if (anchor) {
+                console.time('scrollToAnchor');
+                const targetElement = document.querySelector(`#anchor-${anchor}`);
+                if (targetElement) {
+                    targetElement.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+                console.timeEnd('scrollToAnchor');
+            }
+        }, 100);
+
+        setupEventListeners(tableContainer);
+    } catch (error) {
+        handleError(error, tableContainer);
+    }
+    console.timeEnd('loadMarkdownTable');
 }

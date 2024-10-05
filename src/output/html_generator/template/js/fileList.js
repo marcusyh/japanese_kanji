@@ -1,4 +1,6 @@
-export async function fetchFileList() {
+import { handleError } from './utils.js';
+
+async function fetchFileList() {
     const response = await fetch('/file_list');
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -6,7 +8,7 @@ export async function fetchFileList() {
     return await response.json();
 }
 
-export function renderFileList(files, container) {
+function renderFileList(files, container) {
     const ul = document.createElement('ul');
     files.forEach(file => {
         const li = document.createElement('li');
@@ -18,3 +20,26 @@ export function renderFileList(files, container) {
     });
     container.appendChild(ul);
 }
+
+
+export async function loadFileList(tableContainer) {
+    try {
+        const files = await fetchFileList();
+        tableContainer.innerHTML = ''; // 清空容器
+        renderFileList(files, tableContainer);
+        setupFileListEventListeners(tableContainer);
+    } catch (error) {
+        handleError(error, tableContainer);
+    }
+}
+
+function setupFileListEventListeners(tableContainer) {
+    tableContainer.addEventListener('click', (e) => {
+        if (e.target.tagName === 'A' && !e.target.classList.contains('index-link')) {
+            e.preventDefault();
+            const filename = e.target.getAttribute('href').slice(1);
+            window.location.hash = filename; // 这会触发 hashchange 事件
+        }
+    });
+}
+

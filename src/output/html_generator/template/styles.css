@@ -57,9 +57,44 @@ a:hover {
 }
 
 .tippy-box {
-    background-color: #2d2d2d;
-    color: #d4d4d4;
-    border: 1px solid #3c3c3c;
+    background-color: #f8f8f8; /* 稍微比纯白色深一点的背景 */
+    color: #333; /* 深色文字，确保在浅色背景上清晰可见 */
+    border: 1px solid #e0e0e0; /* 添加一个浅灰色边框以增加区分度 */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* 添加轻微阴影效果 */
+    min-width: 150px; /* 设置最小宽度 */
+}
+
+.tippy-arrow {
+    color: #f8f8f8; /* 确保箭头颜色与背景一致 */
+}
+
+/* 如果需要调整内容区域的样式 */
+.tippy-content {
+    padding: 10px;
+    min-height: 50px; /* 设置最小高度，确保即使内容很少，tip 也有一定的高度 */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* 为不同的标题级别设置样式 */
+.tippy-content h3 {
+    color: #2c3e50; /* 深蓝灰色，为标题提供一些对比 */
+    margin-top: 0;
+    margin-bottom: 10px; /* 增加底部边距 */
+    font-size: 16px; /* 调整标题大小 */
+}
+
+.tippy-content h4 {
+    color: #34495e; /* 稍微浅一点的蓝灰色 */
+    margin-top: 10px; /* 增加顶部边距 */
+    margin-bottom: 5px;
+    font-size: 14px; /* 调整标题大小 */
+}
+
+/* 为段落文本设置样式 */
+.tippy-content p {
+    margin-bottom: 5px;
+    font-size: 13px; /* 调整文本大小 */
 }
 
 .kanji {

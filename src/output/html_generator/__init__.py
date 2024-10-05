@@ -73,8 +73,9 @@ def generate_html(
     output_dir = os.path.dirname(os.path.dirname(output_filepath))
     prepare_output_path(output_dir)
 
-    # copy html template
+    # copy html template and http server
     shutil.copytree('output/html_generator/template', output_dir)
+    shutil.copy('output/html_generator/http_server.py', os.path.dirname(output_dir))
     
     # generate words json
     words_dict = generate_words_json(merged_kanji_info, kanji_ydkey_map)
