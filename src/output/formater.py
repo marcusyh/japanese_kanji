@@ -196,9 +196,6 @@ def group_kanji_by_kunyomi(
         else:
             kanji_groups[group_key][1].append(kanji)
     
-    for k, v in kanji_groups.items():
-        print(k, v)
-    
     return kanji_groups
         
 
@@ -403,6 +400,7 @@ def expand_and_sort_groups(groups: Dict[Tuple[Tuple[str, ...], ...], Any], dupli
         merged_group.update({
             "index": index,
             "sort_key": sort_key,
+            "main_row_flag": True
         })
         
         # if not duplicate_by_all, just append the group
@@ -482,7 +480,8 @@ def generate_yomi_rows(
         kanji_groups = group_kanji_by_onyomi(info, merge_hyogai)
 
     if kunyomi_flag:
-        info = {key: value['ja']['訓読み'] for key, value in kanji_yomi_dict.items()}
+        info = {}
+        info = {key: value['ja']['訓読み'] for key, value in kanji_yomi_dict.items() if value['ja']['訓読み']['訓読み']}
         # Group kanji into groups
         kanji_groups = group_kanji_by_kunyomi(info, merge_hyogai)
     

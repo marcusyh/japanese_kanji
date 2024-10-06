@@ -306,7 +306,8 @@ def merge_with_preparation(wikt_onyomi_dict, add_mark_flag=True):
                 "音読み": fixed_onyomi_info,
                 "訓読み": {
                     "訓読み": kunyomi_info
-                }
+                },
+                "語彙": prpr_kanji_info['yomi'].get('語彙', [])
             }
         }
 

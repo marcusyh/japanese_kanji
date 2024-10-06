@@ -15,7 +15,6 @@ def kanji_type_list(value):
     types = [t.strip().lower() for t in value.split(',')]
     if not all(t in valid_types for t in types):
         raise argparse.ArgumentTypeError(f"Invalid kanji type. Valid types are: {', '.join(valid_types)}")
-    print(value, types)
     return types
 
 

@@ -54,6 +54,16 @@ def deploy_template(args):
     prepare_file_path(webUI_deploy_path, is_dir=True, delete_if_exists=args.remove_existing_files)
     # copy html template and http server
     shutil.copytree('webUI/template', webUI_deploy_path, dirs_exist_ok=True)
+    # Create a symbolic link to data_deploy_path in webUI_deploy_path/data
+
+    data_deploy_path = '../data'
+    data_link_path = os.path.join(webUI_deploy_path, 'data')
+    # Remove existing symlink if it exists
+    if os.path.islink(data_link_path):
+        os.unlink(data_link_path)
+    # Create the new symlink
+    os.symlink(data_deploy_path, data_link_path, target_is_directory=True)
+    print(f"Created symbolic link: {data_link_path} -> {data_deploy_path}")
             
 
 def deploy_http_server(args):
@@ -67,7 +77,7 @@ def deploy_http_server(args):
 
 def deploy_data(args):
     # The path to deploy data
-    data_deploy_path = os.path.join(args.deploy_path, 'webUI', 'data')
+    data_deploy_path = os.path.join(args.deploy_path, 'data')
     # delete data dir if exists
     prepare_file_path(data_deploy_path, is_dir=True, delete_if_exists=args.remove_existing_files)
     # copy data
@@ -78,15 +88,15 @@ def deploy_update_webui(args):
     # If no specific update flags are set, update everything
     update_all = not (args.update_template or args.update_http_server or args.update_data)
 
-    if update_all or args.update_template:
-        deploy_template(args)
-   
     if update_all or args.update_http_server:
         deploy_http_server(args)
     
     if update_all or args.update_data:
         deploy_data(args)
         
+    if update_all or args.update_template:
+        deploy_template(args)
+   
 
 def regist_webui_args(sub_parsers):
     add_webui_args(sub_parsers)

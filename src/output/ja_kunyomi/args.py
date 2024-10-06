@@ -21,10 +21,10 @@ def add_kunyomi_args(sub_parsers):
         help='Path to the wiki cache. (default: ../data/wiktionary)'
     )
     kunyomi_parser.add_argument(
-        '-f', '--output_path',
+        '-f', '--output_dir',
         type=str,
-        default=markdown_file_path,
-        help=f'Path to the output file containing kunyomi data. If not specified, defaults to {markdown_file_path} for Markdown or {csv_file_path} for CSV.'
+        default=config.MARKDOWN_PATH,
+        help=f'Path to the output directory containing all data. If not specified, defaults to {config.MARKDOWN_PATH} for Markdown or {config.CSV_PATH} for CSV.'
     )
     kunyomi_parser.add_argument(
         '-c', '--output_format',
@@ -40,12 +40,6 @@ def add_kunyomi_args(sub_parsers):
     )
 
     
-def output_kunyomi_wrapper(args):
-    if args.output_format == 'csv':
-        args.output_path = args.output_path.replace('.md', '.csv')
-    output_ja_kunyomi(args)
-
-
 def regist_ja_kunyomi(sub_parsers):
     add_kunyomi_args(sub_parsers)
-    return {'kunyomi': output_kunyomi_wrapper}
+    return {'kunyomi': output_ja_kunyomi}

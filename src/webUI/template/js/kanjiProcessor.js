@@ -23,6 +23,7 @@ function handleKanjiMouseMove(event) {
 }
 
 export function generateKanjiContent(kanji, info) {
+    console.log(info)
     let content = `<div class="kanji-info"><h3>${kanji}</h3>`;
     if (info['音読み'] && Array.isArray(info['音読み'])) {
         content += '<h4>音読み</h4>';

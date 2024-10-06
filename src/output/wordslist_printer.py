@@ -11,7 +11,6 @@ def generate_words_json(merged_kanji_info, kanji_ydkey_map):
         words_dict[kanji] = {}
         
         onyomi_list = []
-        x = merged_kanji_info[primary_key]['ja']
         if '音読み' in merged_kanji_info[primary_key]['ja']:
             for reading_type, readings in merged_kanji_info[primary_key]['ja']['音読み'].items():
                 if '表内' not in readings:
@@ -30,8 +29,8 @@ def generate_words_json(merged_kanji_info, kanji_ydkey_map):
                         onyomi_list.append(new_pron)
                         
         kunyomi_list = []
-        if '訓読み' in merged_kanji_info[primary_key]['ja']:
-            kunyomi_ori = merged_kanji_info[primary_key]['ja']['訓読み']
+        if '訓読み' in merged_kanji_info[primary_key]['ja'] and '訓読み' in merged_kanji_info[primary_key]['ja']['訓読み']:
+            kunyomi_ori = merged_kanji_info[primary_key]['ja']['訓読み']['訓読み']
             if '表内' in kunyomi_ori:
                 for pron_dict in kunyomi_ori['表内']:
                     new_pron = {}
@@ -47,7 +46,8 @@ def generate_words_json(merged_kanji_info, kanji_ydkey_map):
                         
         words_dict[kanji] = {
             "音読み": onyomi_list,
-            "訓読み": kunyomi_list
+            "訓読み": kunyomi_list,
+            "語彙": merged_kanji_info[primary_key]['ja'].get('語彙', [])
         }
         
     return words_dict

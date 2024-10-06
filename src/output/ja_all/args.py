@@ -3,8 +3,6 @@ import os
 from output import config
 from output.ja_all import output_ja_all
 
-markdown_file_path = os.path.join(config.MARKDOWN_PATH, f'{config.ONYOMI_FILENAME}.md')
-
 def add_all_args(sub_parsers):
     all_parser = sub_parsers.add_parser(
         'all',

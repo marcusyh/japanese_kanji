@@ -19,8 +19,11 @@ def append_yomi(yomi_dict, kanji_info, source_name, raw_kanji):
     It also handles error cases and appends the processed information to the yomi_dict.
     """
     for kana, words in kanji_info.items():
-        if type(words) == list:
-            print(kana, words)
+        if type(words) == list and kana == '':
+            # some special words pronunciation is not categorized as kunyomi or onyomi
+            if '語彙' not in yomi_dict:
+                yomi_dict['語彙'] = []
+            yomi_dict['語彙'].extend(words)
             continue
         # Clean the pronunciation and create a list of associated words
         pron = kana.strip()
