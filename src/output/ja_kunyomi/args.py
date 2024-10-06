@@ -1,9 +1,11 @@
 import argparse
+import os
+from output import config
 from output.ja_kunyomi import output_ja_kunyomi
 
-markdown_path = '../data/parsed_result/markdown/ja_kunyomi.md'
-csv_path = '../data/parsed_result/csv/ja_kunyomi.csv'
-html_path = '../data/parsed_result/html/data/日本語_訓読み表.md'
+markdown_file_path = os.path.join(config.MARKDOWN_PATH, f'{config.KUNYOMI_FILENAME}.md')
+csv_file_path = os.path.join(config.CSV_PATH, f'{config.KUNYOMI_FILENAME}.csv')
+
 
 def add_kunyomi_args(sub_parsers):
     kunyomi_parser = sub_parsers.add_parser(
@@ -15,21 +17,21 @@ def add_kunyomi_args(sub_parsers):
     kunyomi_parser.add_argument(
         '-w', '--input_wiki_cache_dir',
         type=str,
-        default='../data/wiktionary',
+        default=config.WIKT_CACHE_DIR,
         help='Path to the wiki cache. (default: ../data/wiktionary)'
     )
     kunyomi_parser.add_argument(
         '-f', '--output_path',
         type=str,
-        default=markdown_path,
-        help=f'Path to the output file containing kunyomi data. If not specified, defaults to {markdown_path} for Markdown or {csv_path} for CSV or {html_path} for HTML.'
+        default=markdown_file_path,
+        help=f'Path to the output file containing kunyomi data. If not specified, defaults to {markdown_file_path} for Markdown or {csv_file_path} for CSV.'
     )
     kunyomi_parser.add_argument(
         '-c', '--output_format',
         type=str,
         default='markdown',
-        choices=['markdown', 'csv', 'html'],
-        help='Output format. The value must be markdown, csv or html. By default, output in Markdown format.'
+        choices=['markdown', 'csv'],
+        help='Output format. The value must be markdown or csv. By default, output in Markdown format.'
     )
     kunyomi_parser.add_argument(
         '-d', '--show_duplicated',
@@ -41,9 +43,6 @@ def add_kunyomi_args(sub_parsers):
 def output_kunyomi_wrapper(args):
     if args.output_format == 'csv':
         args.output_path = args.output_path.replace('.md', '.csv')
-    elif args.output_format == 'html':
-        if not args.output_path or args.output_path == markdown_path or args.output_path == csv_path:
-            args.output_path = html_path
     output_ja_kunyomi(args)
 
 

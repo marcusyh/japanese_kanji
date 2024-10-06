@@ -1,5 +1,6 @@
+import { CONFIG } from './config.js';
+
 export async function fetchMarkdown(filename) {
-    // 移除可能的锚点
     const cleanFilename = filename.split('#')[0];
     const timestamp = new Date().getTime();
     const response = await fetch(`data/${cleanFilename}?t=${timestamp}`, {
@@ -12,14 +13,18 @@ export async function fetchMarkdown(filename) {
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const markdown = await response.text();
-    console.log("Markdown content:", markdown.substring(0, 200) + "...");
-    return markdown;
+    return await response.text();
 }
 
 export async function fetchKanjiInfo() {
-    const response = await fetch('data/words_list.json');
-    //console.log(response)
+    const timestamp = new Date().getTime();
+    const response = await fetch(`${CONFIG.KANJI_INFO_PATH}?t=${timestamp}`, {
+        headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+        }
+    });
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }

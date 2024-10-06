@@ -2,6 +2,7 @@ import argparse
 from preparation.args import regist_preparation
 from wikt_cache.args import regist_wiktionary
 from output.args import regist_parser
+from webUI import regist_webui_args
 
 def cmdargs_parser():
     parser = argparse.ArgumentParser(description="Wiktionary Japanese and Chinese tools")
@@ -25,6 +26,9 @@ def cmdargs_parser():
 
     # register sub-command: onyomi
     function_register.update(regist_parser(sub_commands))
+
+    # register sub-command: webUI
+    function_register.update(regist_webui_args(sub_commands))
     
     args = parser.parse_args()
 

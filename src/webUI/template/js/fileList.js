@@ -1,7 +1,8 @@
 import { handleError } from './utils.js';
+import { CONFIG } from './config.js';
 
 async function fetchFileList() {
-    const response = await fetch('/file_list');
+    const response = await fetch(CONFIG.FILE_LIST_ENDPOINT);
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }

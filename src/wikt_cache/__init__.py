@@ -1,4 +1,4 @@
-from file_util import prepare_directory
+from file_util import prepare_file_path
 from preparation.loader import load_local_kanji_without_tag
 from wikt_cache.wiki_cache import WikiCache
 from wikt_cache.ui import confirm_fetch_remote, show_kanji_list, show_brief_info
@@ -17,7 +17,7 @@ def get_kanji_list(source_data_dir):
 
 
 def fetch_wikt_cache(source_data_dir, cache_path, update_flag=False, fetch_missing_only=True):
-    prepare_directory(cache_path)
+    prepare_file_path(cache_path)
 
     wc = WikiCache(cache_path)
     cache_info = wc.cache_info()

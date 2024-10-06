@@ -1,7 +1,6 @@
 from typing import Dict, List, Any
 import inspect
-from file_util import prepare_output_path
-from output.html_generator import generate_html
+from file_util import prepare_file_path
 
 def get_default_param(func, param_name, default_value):
     return inspect.signature(func).parameters.get(param_name, inspect.Parameter.empty).default or default_value
@@ -26,7 +25,7 @@ def convert_to_rows(merged_kanji_info: List[Any], headers: List[str]) -> List[Li
 
 def genrate_markdown(headers, rows, filename):
     # makesure output path is valid and check if file exists
-    prepare_output_path(filename)
+    prepare_file_path(filename, is_dir=False, delete_if_exists=True)
 
     output = ['| ' + ' | '.join(headers) + ' |', '|' + '---|' * len(headers)]
     output.extend(['| ' + ' | '.join(row) + ' |' for row in rows])
@@ -41,7 +40,7 @@ def genrate_markdown(headers, rows, filename):
 
 def genrate_csv(headers, rows, filename):
     # makesure output path is valid and check if file exists
-    prepare_output_path(filename)
+    prepare_file_path(filename, is_dir=False, delete_if_exists=True)
 
     output = [','.join(headers)]
     output.extend([','.join(row) for row in rows])
@@ -55,8 +54,6 @@ def genrate_csv(headers, rows, filename):
 
 
 def output_yomi_info(
-        kanji_yomi_dict: Dict[str, Any],
-        kanji_ydkey_map: Dict[str, Any],
         merged_kanji_info: Dict[str, Any], 
         filename: str = None, 
         output_format: str = 'markdown', 
@@ -70,9 +67,6 @@ def output_yomi_info(
     if output_format == 'csv':
         genrate_csv(headers, rows, filename)
     elif output_format == 'markdown':
-        genrate_markdown(headers, rows, filename)
-    elif output_format == 'html':
-        generate_html(filename, kanji_yomi_dict, kanji_ydkey_map)
         genrate_markdown(headers, rows, filename)
     else:
         raise ValueError(f'Invalid output format: {output_format}')

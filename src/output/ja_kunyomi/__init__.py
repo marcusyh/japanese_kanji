@@ -1,7 +1,7 @@
 
 from wikt_parser import parse_ja_yomi
 from output.formater import generate_yomi_rows
-from output.printer import output_yomi_info
+from output.yomi_printer import output_yomi_info
 
 def generate_headers(duplicate_by_all):
     headers = ["", "音序"] if duplicate_by_all else []
@@ -25,8 +25,6 @@ def output_ja_kunyomi(args):
 
     # output kunyomi info
     output_yomi_info(
-        kanji_yomi_dict,
-        kanji_ydkey_map,
         merged_kunyomi_groups, 
         filename=args.output_path, 
         output_format=args.output_format, 

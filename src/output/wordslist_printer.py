@@ -1,8 +1,6 @@
-import shutil
 import os
 import json
-from file_util import prepare_output_path
-
+from file_util import prepare_file_path
 
 def generate_words_json(merged_kanji_info, kanji_ydkey_map):
     words_dict = {}
@@ -56,27 +54,15 @@ def generate_words_json(merged_kanji_info, kanji_ydkey_map):
         
         
 
-def save_json_file(words_dict, output_dir):
+def save_json_file(output_filepath, words_dict):
     # create words json dir
-    words_json_path = os.path.join(output_dir, 'data', 'words_list.json')
-    with open(words_json_path, 'w', encoding='utf-8') as f:
+    prepare_file_path(output_filepath, is_dir=False, delete_if_exists=True)
+    with open(output_filepath, 'w', encoding='utf-8') as f:
         json.dump(words_dict, f, ensure_ascii=False, indent=4)
     
-
-
-def generate_html(
-        output_filepath,
-        merged_kanji_info, 
-        kanji_ydkey_map 
-    ):
-    # create html dir
-    output_dir = os.path.dirname(os.path.dirname(output_filepath))
-    prepare_output_path(output_dir)
-
-    # copy html template and http server
-    shutil.copytree('output/html_generator/template', output_dir)
-    shutil.copy('output/html_generator/http_server.py', os.path.dirname(output_dir))
     
+def output_wordslist(output_path, kanji_yomi_dict, kanji_ydkey_map):
     # generate words json
-    words_dict = generate_words_json(merged_kanji_info, kanji_ydkey_map)
-    save_json_file(words_dict, output_dir)
+    words_dict = generate_words_json(kanji_yomi_dict, kanji_ydkey_map)
+    # save words json
+    save_json_file(output_path, words_dict)

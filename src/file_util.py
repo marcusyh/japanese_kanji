@@ -42,27 +42,20 @@ def convert_to_writable(kanji_dict):
     return writable
 
 
-def prepare_directory(filepath):
-    directory = os.path.dirname(filepath)
-
-    # Check if directory exists, create if it doesn't
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-        print(f"Created directory: {directory}")
- 
-
-def prepare_output_path(filepath):
-    prepare_directory(filepath)
-
-    filename = os.path.basename(filepath)
-
+def prepare_file_path(input_path, is_dir=False, delete_if_exists=False, create_if_not_exists=False):
+    input_path = os.path.abspath(input_path)
+    
+    filename = os.path.basename(input_path)
     # Check if file exists
-    if os.path.exists(filepath):
+    if os.path.exists(input_path) and delete_if_exists:
         while True:
             user_input = input(f"File {filename} already exists. Delete and continue? (y/n): ").lower()
             if user_input == 'y':
-                shutil.rmtree(filepath)
-                print(f"Deleted existing file: {filepath}")
+                if os.path.isdir(input_path):
+                    shutil.rmtree(input_path)
+                else:
+                    os.remove(input_path)
+                print(f"Deleted existing file: {input_path}")
                 break
             elif user_input == 'n':
                 print("Exiting program.")
@@ -70,25 +63,13 @@ def prepare_output_path(filepath):
             else:
                 print("Invalid input. Please enter 'y' or 'n'.")
             
-    if os.path.isdir(filepath):
-        os.makedirs(filepath)
-    
-    return filepath
+    if create_if_not_exists:
+        directory = input_path if is_dir else os.path.dirname(input_path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+            print(f"Created directory: {directory}")
 
-
-def readfile(dirname):
-    data = []
-    for f in os.listdir(dirname):
-        fpath = os.path.join(dirname, f)
-        if not os.path.isfile(fpath):
-            continue
-        h = open(fpath, 'r')
-        for i in h.readlines():
-            if i.strip() == '':
-                continue
-            data.append(i.strip())
-        h.close()
-    return data
+    return True
 
 
 def save_to_docx(sets, filename, header, filepath):

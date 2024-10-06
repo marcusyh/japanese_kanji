@@ -100,7 +100,7 @@ def run_server(port, directory):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Simple HTTP Server with custom features")
     parser.add_argument('-p', '--port', type=int, default=8000, help="Port to run the server on")
-    parser.add_argument('-d', '--directory', type=str, default=f'{os.getcwd()}/html', help="Directory to serve")
+    parser.add_argument('-d', '--directory', type=str, default=f'{os.getcwd()}/webUI', help="Directory to serve")
     args = parser.parse_args()
 
     run_server(args.port, args.directory)
