@@ -4,6 +4,9 @@ import { fetchMarkdown, fetchKanjiInfo } from './dataFetcher.js';
 import { initializeTippy } from './tippyInitializer.js';
 import { handleError } from './utils.js';
 
+let hasHyogaiColumns = false;
+let hasOldColumns = false;
+
 export function renderTable(html, tableContainer) {
     tableContainer.innerHTML = html;
     setTimeout(() => processTable(tableContainer), 100);
@@ -17,7 +20,15 @@ export function processTable(tableContainer, kanjiInfo) {
         const headerTexts = Array.from(headers).map(header => header.textContent.trim());
         const kanjiColumnIndex = headerTexts.indexOf('漢字');
         const indexColumnIndex = headerTexts.indexOf('index');
+        
+        // 检查是否存在 *_表外 或 *_old 列
+        hasHyogaiColumns = headerTexts.some(header => header.endsWith('_表外'));
+        hasOldColumns = headerTexts.some(header => header.endsWith('_old'));
+        
         processTableRows(table, kanjiColumnIndex, indexColumnIndex, headerTexts, kanjiInfo);
+        
+        // 更新按钮状态
+        updateButtonVisibility();
     } else {
         console.error("No table found in the parsed HTML");
     }
@@ -77,6 +88,19 @@ function processIndexCell(firstCell, indexCell) {
     }
 }
 
+function updateButtonVisibility() {
+    const hyogaiButton = document.getElementById('show/hide-hyogai');
+    const oldButton = document.getElementById('show/hide-old');
+    
+    if (hyogaiButton) {
+        hyogaiButton.style.display = hasHyogaiColumns ? 'inline-block' : 'none';
+        hyogaiButton.textContent = 'Hide Hyogai';
+    }
+    if (oldButton) {
+        oldButton.style.display = hasOldColumns ? 'inline-block' : 'none';
+        oldButton.textContent = 'Hide Old';
+    }
+}
 
 export async function loadMarkdownTable(filename, anchor, tableContainer, kanjiInfo) {
     console.time('loadMarkdownTable');
@@ -127,3 +151,5 @@ export async function loadMarkdownTable(filename, anchor, tableContainer, kanjiI
     }
     console.timeEnd('loadMarkdownTable');
 }
+
+export { hasHyogaiColumns, hasOldColumns };

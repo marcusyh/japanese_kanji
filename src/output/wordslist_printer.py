@@ -56,7 +56,7 @@ def generate_words_json(merged_kanji_info, kanji_ydkey_map):
 
 def save_json_file(output_filepath, words_dict):
     # create words json dir
-    prepare_file_path(output_filepath, is_dir=False, delete_if_exists=True)
+    prepare_file_path(output_filepath, is_dir=False, delete_if_exists=True, create_if_not_exists=True)
     with open(output_filepath, 'w', encoding='utf-8') as f:
         json.dump(words_dict, f, ensure_ascii=False, indent=4)
     

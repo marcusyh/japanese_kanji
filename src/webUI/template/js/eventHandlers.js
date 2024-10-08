@@ -5,6 +5,16 @@ export function setupEventListeners(tableContainer) {
     document.getElementById('back-to-top').addEventListener('click', handleBackToTopClick);
     document.getElementById('back-to-previous').addEventListener('click', handleBackToPreviousClick);
     tableContainer.addEventListener('click', handleTableClick);
+    
+    const hyogaiButton = document.getElementById('show/hide-hyogai');
+    const oldButton = document.getElementById('show/hide-old');
+    
+    if (hyogaiButton) {
+        hyogaiButton.addEventListener('click', toggleHyogaiColumns);
+    }
+    if (oldButton) {
+        oldButton.addEventListener('click', toggleOldColumns);
+    }
 }
 
 function handleTableClick(e) {
@@ -50,6 +60,40 @@ function handleBackToPreviousClick(e) {
         top: previousPosition,
         behavior: 'smooth'
     });
+}
+
+function toggleHyogaiColumns(e) {
+    e.preventDefault();
+    const table = document.querySelector('table');
+    if (!table) return;
+    
+    const headers = table.querySelectorAll('th');
+    headers.forEach((header, index) => {
+        if (header.textContent.trim().endsWith('_表外')) {
+            const columnCells = table.querySelectorAll(`td:nth-child(${index + 1})`);
+            header.classList.toggle('hidden');
+            columnCells.forEach(cell => cell.classList.toggle('hidden'));
+        }
+    });
+    
+    e.target.textContent = e.target.textContent.includes('Show') ? 'Hide Hyogai' : 'Show Hyogai';
+}
+
+function toggleOldColumns(e) {
+    e.preventDefault();
+    const table = document.querySelector('table');
+    if (!table) return;
+    
+    const headers = table.querySelectorAll('th');
+    headers.forEach((header, index) => {
+        if (header.textContent.trim().endsWith('_old')) {
+            const columnCells = table.querySelectorAll(`td:nth-child(${index + 1})`);
+            header.classList.toggle('hidden');
+            columnCells.forEach(cell => cell.classList.toggle('hidden'));
+        }
+    });
+    
+    e.target.textContent = e.target.textContent.includes('Show') ? 'Hide Old' : 'Show Old';
 }
 
 // 添加这个函数来处理浏览器的后退/前进操作

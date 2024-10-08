@@ -56,6 +56,11 @@ a:hover {
     background-color: #1177bb;
 }
 
+#navigation a:disabled {
+    color: gray;
+    pointer-events: none;
+}
+
 .tippy-box {
     background-color: #f8f8f8; /* 稍微比纯白色深一点的背景 */
     color: #333; /* 深色文字，确保在浅色背景上清晰可见 */
@@ -100,4 +105,8 @@ a:hover {
 .kanji {
     cursor: pointer;
     /* 其他样式 */
+}
+
+.hidden {
+    display: none;
 }

@@ -25,7 +25,7 @@ def convert_to_rows(merged_kanji_info: List[Any], headers: List[str]) -> List[Li
 
 def genrate_markdown(headers, rows, filename):
     # makesure output path is valid and check if file exists
-    prepare_file_path(filename, is_dir=False, delete_if_exists=True)
+    prepare_file_path(filename, is_dir=False, delete_if_exists=True, create_if_not_exists=True)
 
     output = ['| ' + ' | '.join(headers) + ' |', '|' + '---|' * len(headers)]
     output.extend(['| ' + ' | '.join(row) + ' |' for row in rows])
@@ -40,7 +40,7 @@ def genrate_markdown(headers, rows, filename):
 
 def genrate_csv(headers, rows, filename):
     # makesure output path is valid and check if file exists
-    prepare_file_path(filename, is_dir=False, delete_if_exists=True)
+    prepare_file_path(filename, is_dir=False, delete_if_exists=True, create_if_not_exists=True)
 
     output = [','.join(headers)]
     output.extend([','.join(row) for row in rows])
