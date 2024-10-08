@@ -1,4 +1,4 @@
-import { generateKanjiContent } from './kanjiProcessor.js';
+import { generateKanjiContent, mergeKanjiInfo } from './kanjiProcessor.js';
 
 export function initializeTippy(kanjiInfo) {
     console.time('initializeTippy');
@@ -20,16 +20,17 @@ export function initializeTippy(kanjiInfo) {
                                 return;
                             }
 
-                            let content = '';
-                            validKanji.forEach(kanji => {
-                                const info = kanjiInfo[kanji];
-                                if (info) {
-                                    content += generateKanjiContent(kanji, info);
-                                } else {
-                                    content += `<div class="kanji-info"><h3>${kanji}</h3><p>没有找到信息</p></div>`;
-                                }
-                            });
-                            instance.setContent(content);
+                            if (validKanji.length === 1) {
+                                const info = kanjiInfo[validKanji[0]];
+                                instance.setContent(generateKanjiContent(validKanji[0], info));
+                            } else {
+                                const mergedInfo = mergeKanjiInfo(validKanji.map(k => ({ kanji: k, info: kanjiInfo[k] })));
+                                let content = '';
+                                mergedInfo.forEach(group => {
+                                    content += generateKanjiContent(group.kanji.join(''), group.info);
+                                });
+                                instance.setContent(content);
+                            }
                         },
                         maxWidth: 500,
                         interactive: true,

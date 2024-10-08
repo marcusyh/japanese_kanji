@@ -22,8 +22,32 @@ function handleKanjiMouseMove(event) {
     }
 }
 
+export function mergeKanjiInfo(kanjiInfoArray) {
+    const groups = [];
+    const processed = new Set();
+
+    for (let i = 0; i < kanjiInfoArray.length; i++) {
+        if (processed.has(i)) continue;
+
+        const currentGroup = { kanji: [kanjiInfoArray[i].kanji], info: kanjiInfoArray[i].info };
+        processed.add(i);
+
+        for (let j = i + 1; j < kanjiInfoArray.length; j++) {
+            if (processed.has(j)) continue;
+
+            if (JSON.stringify(kanjiInfoArray[i].info) === JSON.stringify(kanjiInfoArray[j].info)) {
+                currentGroup.kanji.push(kanjiInfoArray[j].kanji);
+                processed.add(j);
+            }
+        }
+
+        groups.push(currentGroup);
+    }
+
+    return groups;
+}
+
 export function generateKanjiContent(kanji, info) {
-    console.log(info)
     let content = `<div class="kanji-info"><h3>${kanji}</h3>`;
     if (info['音読み'] && Array.isArray(info['音読み'])) {
         content += '<h4>音読み</h4>';

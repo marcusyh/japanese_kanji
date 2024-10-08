@@ -3,7 +3,7 @@ from preparation.jinmei import load_jinmei
 from preparation.hyougai import load_hyougai
 from preparation.itai import load_itai
 from util_kana import check_katakana_hirakana
-
+from collections import Counter
 
 def append_yomi(yomi_dict, kanji_info, source_name, raw_kanji):
     """
@@ -46,6 +46,101 @@ def append_yomi(yomi_dict, kanji_info, source_name, raw_kanji):
 
         # Append the pronunciation and associated words to the appropriate category
         yomi_dict[yomi_key].update({pron: word_list})
+        
+
+def find_common_stem(target, readings):
+    """
+    Find the longest common stem among the target reading and other readings.
+
+    Args:
+        target (str): The target reading to find a stem for.
+        readings (list): A list of all readings to compare against.
+
+    Returns:
+        str: The longest common stem, or the full target if no common stem is found.
+
+    This function works as follows:
+    1. Start with the full length of the target reading.
+    2. Iteratively reduce the length, checking for common stems.
+    3. For each potential stem, count how many readings start with it.
+    4. If more than one reading starts with the stem, it's considered common.
+    5. Return the longest common stem found, or the full target if none is found.
+    """
+    max_length = len(target)
+    for length in range(max_length, 0, -1):
+        # Get a potential stem by slicing the target
+        stem = target[:length]
+        # Count how many readings start with this stem
+        # If more than one, it's a common stem
+        if sum(1 for r in readings if r.startswith(stem)) > 1:
+            return stem
+    # If no common stem is found, return the full target
+    return target
+
+
+def find_kanji_reading(kanji, key, examples):
+    """
+    Find the most probable reading of a kanji based on examples.
+
+    Args:
+        kanji (str): The kanji character.
+        key (str): The full reading (usually in hiragana).
+        examples (list): A list of example words containing the kanji.
+
+    Returns:
+        str: The most probable reading of the kanji.
+    """
+    readings = []
+    for example in examples:
+        if kanji not in example:
+            continue
+        
+        kanji_index = example.index(kanji)
+        if kanji_index == len(example) - 1:
+            readings.append(key)
+            continue
+
+        sub_container = example[kanji_index+1:]
+        
+        # Find the maximum common substring at the start of sub_container and end of key
+        max_common = ""
+        for i in range(min(len(sub_container), len(key)), 0, -1):
+            if sub_container.startswith(key[-i:]):
+                max_common = key[-i:]
+                break
+        
+        # Remove the common part from key
+        new_key = key[:-len(max_common)]
+        
+        if new_key != '':
+            readings.append(new_key)
+    
+    # Count occurrences of each reading and return the most common one
+    key = Counter(readings).most_common(1)[0][0] if readings else key
+    
+    return key
+
+def merge_kunyomi(kanji, kunyomi_ori_dict):
+    if not kunyomi_ori_dict:
+        return {}
+    if len(kunyomi_ori_dict) == 1:
+        k, v = list(kunyomi_ori_dict.items())[0]
+        return {k: {k: v}}
+
+    merged = {}
+    for reading, examples in kunyomi_ori_dict.items():
+        #stem = find_common_stem(reading, list(kunyomi_ori_dict.keys()))
+        stem = find_kanji_reading(kanji, reading, examples)
+        if stem not in merged:
+            merged[stem] = {}
+        merged[stem][reading] = examples
+        
+    for stem, readings in merged.items():
+        merged_words_list = [[reading] + examples for reading, examples in readings.items()]
+        merged[stem] = merged_words_list
+        
+    return merged
+
 
 def load_preparation_data(
         jouyou=True,
@@ -145,6 +240,11 @@ def load_preparation_data(
 
             # Update the mapping for all kanji in this group
             all_kanji_mapping.update({kanji: kanji_info_key for kanji in kanji_list})
-    
+            
+
+    for kanji, value in kanji_info_dict.items():
+        if '訓読み' in value['yomi']:
+            new_kunyomi = merge_kunyomi(kanji, value['yomi']['訓読み'])
+            value['yomi']['訓読み'] = new_kunyomi
 
     return all_kanji_mapping, kanji_info_dict

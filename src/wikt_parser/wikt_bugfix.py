@@ -152,7 +152,6 @@ def merge_exists_wikt_onyomi_by_prpr_itai_group(prpr_itai_kanji_list, wikt_onyom
     return merged_onyomi_dict
  
 
-                
 def fix_by_preparation(wikt_onyomi_dict_all, prpr_onyomi_dict):
     """
     Fix the on'yomi dictionary using preparation data as the Wiktionary data has lots of inaccurate data.
