@@ -27,6 +27,10 @@ export function processTable(tableContainer, kanjiInfo) {
         
         processTableRows(table, kanjiColumnIndex, indexColumnIndex, headerTexts, kanjiInfo);
         
+        // 默认隐藏 *_表外 和 *_old 列
+        hideHyogaiColumns(table);
+        hideOldColumns(table);
+        
         // 更新按钮状态
         updateButtonVisibility();
     } else {
@@ -94,12 +98,34 @@ function updateButtonVisibility() {
     
     if (hyogaiButton) {
         hyogaiButton.style.display = hasHyogaiColumns ? 'inline-block' : 'none';
-        hyogaiButton.textContent = 'Hide Hyogai';
+        hyogaiButton.textContent = 'Show Hyogai';
     }
     if (oldButton) {
         oldButton.style.display = hasOldColumns ? 'inline-block' : 'none';
-        oldButton.textContent = 'Hide Old';
+        oldButton.textContent = 'Show Old';
     }
+}
+
+function hideHyogaiColumns(table) {
+    const headers = table.querySelectorAll('th');
+    headers.forEach((header, index) => {
+        if (header.textContent.trim().endsWith('_表外')) {
+            header.classList.add('hidden');
+            const columnCells = table.querySelectorAll(`td:nth-child(${index + 1})`);
+            columnCells.forEach(cell => cell.classList.add('hidden'));
+        }
+    });
+}
+
+function hideOldColumns(table) {
+    const headers = table.querySelectorAll('th');
+    headers.forEach((header, index) => {
+        if (header.textContent.trim().endsWith('_old')) {
+            header.classList.add('hidden');
+            const columnCells = table.querySelectorAll(`td:nth-child(${index + 1})`);
+            columnCells.forEach(cell => cell.classList.add('hidden'));
+        }
+    });
 }
 
 export async function loadMarkdownTable(filename, anchor, tableContainer, kanjiInfo) {

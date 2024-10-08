@@ -68,15 +68,16 @@ function toggleHyogaiColumns(e) {
     if (!table) return;
     
     const headers = table.querySelectorAll('th');
+    let isHidden = false;
     headers.forEach((header, index) => {
         if (header.textContent.trim().endsWith('_表外')) {
+            isHidden = header.classList.toggle('hidden');
             const columnCells = table.querySelectorAll(`td:nth-child(${index + 1})`);
-            header.classList.toggle('hidden');
             columnCells.forEach(cell => cell.classList.toggle('hidden'));
         }
     });
     
-    e.target.textContent = e.target.textContent.includes('Show') ? 'Hide Hyogai' : 'Show Hyogai';
+    e.target.textContent = isHidden ? 'Show Hyogai' : 'Hide Hyogai';
 }
 
 function toggleOldColumns(e) {
@@ -85,15 +86,16 @@ function toggleOldColumns(e) {
     if (!table) return;
     
     const headers = table.querySelectorAll('th');
+    let isHidden = false;
     headers.forEach((header, index) => {
         if (header.textContent.trim().endsWith('_old')) {
+            isHidden = header.classList.toggle('hidden');
             const columnCells = table.querySelectorAll(`td:nth-child(${index + 1})`);
-            header.classList.toggle('hidden');
             columnCells.forEach(cell => cell.classList.toggle('hidden'));
         }
     });
     
-    e.target.textContent = e.target.textContent.includes('Show') ? 'Hide Old' : 'Show Old';
+    e.target.textContent = isHidden ? 'Show Old' : 'Hide Old';
 }
 
 // 添加这个函数来处理浏览器的后退/前进操作
