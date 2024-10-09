@@ -65,8 +65,19 @@ export function generateKanjiContent(kanji, info) {
         info['訓読み'].forEach(reading => {
             if (reading && typeof reading === 'object') {
                 const pron = reading.pron || '不明';
-                const wordsList = Array.isArray(reading.words_list) ? reading.words_list.join(', ') : '无例词';
-                content += `<p><strong>${pron}</strong>: ${wordsList}</p>`;
+                content += `<div class="kunyomi-group">`;
+                content += `<p class="main-pron"><strong>${pron}</strong></p>`;
+                if (reading.words_list && typeof reading.words_list === 'object') {
+                    Object.entries(reading.words_list).forEach(([subPron, words]) => {
+                        content += `<div class="sub-pron-group">`;
+                        const words_str = Array.isArray(words) && words.length > 0 ? words.join('、') : '无例词';
+                        content += `<p class="sub-pron">&nbsp;&nbsp;${subPron}：${words_str}</p>`;
+                        content += `</div>`;
+                    });
+                } else {
+                    content += `<p class="no-words">无例词</p>`;
+                }
+                content += `</div>`;
             }
         });
     }

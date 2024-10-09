@@ -1,15 +1,22 @@
 import { generateKanjiContent, mergeKanjiInfo, fetchWiktContent } from './kanjiProcessor.js';
 
 const state = {
+    // Object to store Wiktionary file paths for each kanji
     wiktFiles: {},
+
+    // Reference to the currently active tooltip instance
     activeTooltip: null,
+
+    // Flag to track if the Wiktionary content button has been clicked
     isWiktButtonClicked: false,
+
+    // Timer for delayed tooltip hiding on mouse leave
     mouseLeaveTimer: null
 };
 
 const config = {
     mouseLeaveDelay: 300,
-    minTooltipWidth: 0.05,
+    minTooltipWidth: 0.1,
     maxTooltipWidth: 0.4
 };
 
@@ -53,7 +60,7 @@ async function createTooltipContent(validKanji, kanjiInfo) {
                 if (wiktContent && wiktContent.trim() !== '') {
                     content += `
                         <div class="wikt-content-wrapper">
-                            <button class="wikt-toggle" data-kanji="${kanji}">显示维基词典内容</button>
+                            <button class="wikt-toggle" data-kanji="${kanji}">show wikt</button>
                             <div class="wikt-content" style="display:none;"></div>
                         </div>
                     `;
@@ -74,7 +81,7 @@ function handleWiktButtonClick(e) {
     const content = e.target.nextElementSibling;
     if (content.style.display === 'none') {
         content.style.display = 'block';
-        e.target.textContent = '隐藏维基词典内容';
+        e.target.textContent = 'hide wikt';
         if (!content.dataset.loaded) {
             const kanji = e.target.dataset.kanji;
             fetchWiktContent(state.wiktFiles[kanji]).then(wiktContent => {
@@ -82,21 +89,22 @@ function handleWiktButtonClick(e) {
                 content.dataset.loaded = 'true';
             }).catch(error => {
                 console.error(`Error loading Wiktionary content for ${kanji}:`, error);
-                content.innerHTML = '加载维基词典内容时出错。';
+                content.innerHTML = 'error when loading wikt';
             });
         }
     } else {
         content.style.display = 'none';
-        e.target.textContent = '显示维基词典内容';
+        e.target.textContent = 'show wikt';
+        state.isWiktButtonClicked = false;
     }
 }
 
 function setupTooltipEventListeners(instance) {
     const toggleButtons = instance.popper.querySelectorAll('.wikt-toggle');
     toggleButtons.forEach(button => {
-        // 移除可能存在的旧事件监听器
+        // remove old event listener if there is any
         button.removeEventListener('click', handleWiktButtonClick);
-        // 添加新的事件监听器
+        // add new event listener
         button.addEventListener('click', handleWiktButtonClick);
     });
 
@@ -113,7 +121,7 @@ function setupTooltipEventListeners(instance) {
 
 function createTippyInstance(element, kanjiInfo) {
     return tippy(element, {
-        content: '加载中...',
+        content: 'loading...',
         allowHTML: true,
         trigger: 'manual',
         hideOnClick: false,
@@ -121,7 +129,7 @@ function createTippyInstance(element, kanjiInfo) {
         appendTo: () => document.body,
         onShow(instance) {
             state.activeTooltip = instance;
-            // 确保在每次显示时都重新设置事件监听器
+            // ensure event listeners are set up on every show
             setTimeout(() => setupTooltipEventListeners(instance), 0);
         },
         onHide(instance) {
@@ -137,7 +145,7 @@ function createTippyInstance(element, kanjiInfo) {
             const validKanji = fullText.split('').filter(char => kanjiInfo.hasOwnProperty(char));
             
             if (validKanji.length === 0) {
-                instance.setContent(`没有找到有效的汉字信息`);
+                instance.setContent(`no valid kanji info`);
                 return;
             }
 
@@ -172,6 +180,13 @@ function handleKanjiMouseEnter(element, tippyInstance, kanjiInfo) {
     }
 
     if (state.activeTooltip && state.activeTooltip !== tippyInstance) {
+        // 重置之前的 tooltip 状态
+        const prevWiktButton = state.activeTooltip.popper.querySelector('.wikt-toggle');
+        const prevWiktContent = state.activeTooltip.popper.querySelector('.wikt-content');
+        if (prevWiktButton && prevWiktContent) {
+            prevWiktContent.style.display = 'none';
+            prevWiktButton.textContent = 'show wikt';
+        }
         state.activeTooltip.hide();
     }
 
@@ -179,6 +194,7 @@ function handleKanjiMouseEnter(element, tippyInstance, kanjiInfo) {
         tippyInstance = createTippyInstance(element, kanjiInfo);
     }
     tippyInstance.show();
+    state.isWiktButtonClicked = false;
     return tippyInstance;
 }
 
@@ -201,8 +217,17 @@ function handleGlobalClick(event) {
     if (state.activeTooltip && 
         !state.activeTooltip.popper.contains(event.target) && 
         !event.target.classList.contains('kanji')) {
-        state.activeTooltip.hide();
+        
+        // 重置 Wiktionary 按钮和内容状态
+        const wiktButton = state.activeTooltip.popper.querySelector('.wikt-toggle');
+        const wiktContent = state.activeTooltip.popper.querySelector('.wikt-content');
+        if (wiktButton && wiktContent) {
+            wiktContent.style.display = 'none';
+            wiktButton.textContent = 'show wikt';
+        }
+        
         state.isWiktButtonClicked = false;
+        state.activeTooltip.hide();
     }
 }
 

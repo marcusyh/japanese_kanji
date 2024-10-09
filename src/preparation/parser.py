@@ -135,10 +135,11 @@ def merge_kunyomi(kanji, kunyomi_ori_dict):
             merged[stem] = {}
         merged[stem][reading] = examples
         
+    """
     for stem, readings in merged.items():
         merged_words_list = [[reading] + examples for reading, examples in readings.items()]
         merged[stem] = merged_words_list
-        
+    """ 
     return merged
 
 

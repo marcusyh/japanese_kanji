@@ -10,24 +10,30 @@ def generate_words_json(merged_kanji_info, kanji_ydkey_map):
             continue
         words_dict[kanji] = {}
         
-        onyomi_list = []
+        # merge duplicated pron and words_list in onyomi_dict
+        onyomi_dict = {}
         if '音読み' in merged_kanji_info[primary_key]['ja']:
             for reading_type, readings in merged_kanji_info[primary_key]['ja']['音読み'].items():
                 if '表内' not in readings:
                     continue
                 for pron_dict in readings['表内']:
-                    new_pron = {}
-                    if 'pron' in pron_dict:
-                        pron = pron_dict['pron']
-                        new_pron = {
-                            'pron': pron,
-                            'type': reading_type
-                        }
-                    if 'words_list' in pron_dict:
-                        new_pron['words_list'] = pron_dict['words_list']
-                    if new_pron:
-                        onyomi_list.append(new_pron)
-                        
+                    new_pron = tuple([
+                        pron_dict['pron'] if 'pron' in pron_dict else '',
+                        tuple(pron_dict['words_list']) if 'words_list' in pron_dict else tuple()
+                        ])
+                    if new_pron not in onyomi_dict:
+                        onyomi_dict[new_pron] = []
+                    onyomi_dict[new_pron].append(reading_type)
+        # convert onyomi_dict to onyomi_list
+        onyomi_list = [
+            {
+                'pron': new_pron[0],
+                'type': '/'.join(reading_types),
+                'words_list': list(new_pron[1])
+            }
+            for new_pron, reading_types in onyomi_dict.items()
+        ]
+
         kunyomi_list = []
         if '訓読み' in merged_kanji_info[primary_key]['ja'] and '訓読み' in merged_kanji_info[primary_key]['ja']['訓読み']:
             kunyomi_ori = merged_kanji_info[primary_key]['ja']['訓読み']['訓読み']
