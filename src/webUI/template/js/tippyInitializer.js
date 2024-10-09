@@ -11,7 +11,10 @@ const state = {
     isWiktButtonClicked: false,
 
     // Timer for delayed tooltip hiding on mouse leave
-    mouseLeaveTimer: null
+    mouseLeaveTimer: null,
+
+    // To prevent other tooltips from being shown when there is any click happend inside the range of the active tooltip
+    blockOtherTooltips: false
 };
 
 const config = {
@@ -77,6 +80,8 @@ async function createTooltipContent(validKanji, kanjiInfo) {
 function handleWiktButtonClick(e) {
     e.stopPropagation();
     e.preventDefault();
+
+    state.blockOtherTooltips = true;
     state.isWiktButtonClicked = true;
     const content = e.target.nextElementSibling;
     if (content.style.display === 'none') {
@@ -96,6 +101,7 @@ function handleWiktButtonClick(e) {
         content.style.display = 'none';
         e.target.textContent = 'show wikt';
         state.isWiktButtonClicked = false;
+        //state.isWiktButtonClicked = false;
     }
 }
 
@@ -113,7 +119,7 @@ function setupTooltipEventListeners(instance) {
     });
 
     instance.popper.addEventListener('mouseleave', () => {
-        if (!state.isWiktButtonClicked) {
+        if (!state.blockOtherTooltips) {
             startMouseLeaveTimer(instance);
         }
     });
@@ -131,6 +137,11 @@ function createTippyInstance(element, kanjiInfo) {
             state.activeTooltip = instance;
             // ensure event listeners are set up on every show
             setTimeout(() => setupTooltipEventListeners(instance), 0);
+            // 添加 tooltip 内部的点击事件监听器
+            instance.popper.addEventListener('click', (e) => {
+                e.stopPropagation();
+                state.blockOtherTooltips = true;
+            });
         },
         onHide(instance) {
             if (state.activeTooltip === instance) {
@@ -138,6 +149,9 @@ function createTippyInstance(element, kanjiInfo) {
             }
             if (!state.isWiktButtonClicked) {
                 state.isWiktButtonClicked = false;
+            }
+            if (!state.blockOtherTooltips) {
+                state.blockOtherTooltips = false;
             }
         },
         async onMount(instance) {
@@ -175,8 +189,9 @@ function createTippyInstance(element, kanjiInfo) {
 function handleKanjiMouseEnter(element, tippyInstance, kanjiInfo) {
     clearTimeout(state.mouseLeaveTimer);
     
-    if (state.isWiktButtonClicked && state.activeTooltip) {
-        return;
+    // 如果其他 tooltip 被屏蔽，则不显示新的 tooltip
+    if (state.blockOtherTooltips && state.activeTooltip !== tippyInstance) {
+        return tippyInstance;
     }
 
     if (state.activeTooltip && state.activeTooltip !== tippyInstance) {
@@ -199,7 +214,7 @@ function handleKanjiMouseEnter(element, tippyInstance, kanjiInfo) {
 }
 
 function handleKanjiMouseLeave(tippyInstance) {
-    if (tippyInstance && !state.isWiktButtonClicked) {
+    if (tippyInstance && !state.blockOtherTooltips) {
         startMouseLeaveTimer(tippyInstance);
     }
 }
@@ -207,27 +222,32 @@ function handleKanjiMouseLeave(tippyInstance) {
 function startMouseLeaveTimer(instance) {
     clearTimeout(state.mouseLeaveTimer);
     state.mouseLeaveTimer = setTimeout(() => {
-        if (instance === state.activeTooltip && !state.isWiktButtonClicked) {
+        if (instance === state.activeTooltip && !state.blockOtherTooltips) {
             instance.hide();
         }
     }, config.mouseLeaveDelay);
 }
-
 function handleGlobalClick(event) {
-    if (state.activeTooltip && 
-        !state.activeTooltip.popper.contains(event.target) && 
-        !event.target.classList.contains('kanji')) {
-        
-        // 重置 Wiktionary 按钮和内容状态
-        const wiktButton = state.activeTooltip.popper.querySelector('.wikt-toggle');
-        const wiktContent = state.activeTooltip.popper.querySelector('.wikt-content');
-        if (wiktButton && wiktContent) {
-            wiktContent.style.display = 'none';
-            wiktButton.textContent = 'show wikt';
+    if (state.activeTooltip) {
+        if (!state.activeTooltip.popper.contains(event.target) && 
+            !event.target.classList.contains('kanji')) {
+            // 点击在 tooltip 外部
+            const wiktButton = state.activeTooltip.popper.querySelector('.wikt-toggle');
+            const wiktContent = state.activeTooltip.popper.querySelector('.wikt-content');
+            if (wiktButton && wiktContent) {
+                wiktContent.style.display = 'none';
+                wiktButton.textContent = 'show wikt';
+            }
+            
+            state.isWiktButtonClicked = false;
+            state.blockOtherTooltips = false;  // 重置屏蔽标志
+            startMouseLeaveTimer(state.activeTooltip);  // 启动 mouseleave 的计时
+        } else {
+            // 点击在 tooltip 内部或触发 tooltip 的汉字上
+            event.stopPropagation();
+            event.preventDefault();
+            state.blockOtherTooltips = true;
         }
-        
-        state.isWiktButtonClicked = false;
-        state.activeTooltip.hide();
     }
 }
 
