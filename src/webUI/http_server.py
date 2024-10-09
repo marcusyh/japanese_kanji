@@ -1,5 +1,6 @@
 import http.server
 import logging
+from logging import handlers
 from datetime import datetime
 import os
 import socketserver
@@ -11,6 +12,28 @@ import socket
 import fcntl
 import errno
 import signal
+
+def init_logger(log_directory):
+    if not os.path.exists(log_directory):
+        os.makedirs(log_directory, exist_ok=True)
+
+    current_time = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    log_filename = os.path.join(log_directory, f"{current_time}.log")
+
+    log_level = logging.INFO
+    logHandler = handlers.TimedRotatingFileHandler(log_filename, when='D', interval=1, backupCount=60)
+
+    logHandler.setFormatter(logging.Formatter('[%(asctime)s] - [%(levelname)s] - %(pathname)s:%(lineno)d - %(message)s'))
+
+    """
+    logging.basicConfig(filename=log_filename, level=logging.INFO, 
+                        format='%(asctime)s - %(levelname)s - %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S')
+    """
+    logging.root.addHandler(logHandler)
+    logging.root.setLevel(log_level)
+
+
 
 class MyHandler(http.server.SimpleHTTPRequestHandler):
     """
@@ -33,19 +56,14 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         """
         super().__init__(*args, directory=directory, **kwargs)
         
-        # Set up logging
-        self.log_directory = 'logs'
-        os.makedirs(self.log_directory, exist_ok=True)
-        self.log_filename = os.path.join(self.log_directory, f"server_log_{datetime.now().strftime('%Y-%m-%d')}.log")
-        logging.basicConfig(filename=self.log_filename, level=logging.INFO, 
-                            format='%(levelname)s - %(message)s')
+        self.wikt_dir = os.path.join(self.directory, 'data', 'wikt')
+        self.data_dir = os.path.join(self.directory, 'data')
 
         if not MyHandler.wikt_files:
             self.load_wikt_files()
 
     def load_wikt_files(self):
-        wikt_dir = os.path.join(self.directory, 'data', 'wikt')
-        for filename in os.listdir(wikt_dir):
+        for filename in os.listdir(self.wikt_dir):
             if filename.endswith('.html'):
                 kanji = filename[:-5]  # 移除 .html 后缀
                 MyHandler.wikt_files[kanji] = os.path.join('data', 'wikt', filename)
@@ -61,8 +79,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            data_dir = os.path.join(self.directory, 'data')
-            file_list = [f for f in os.listdir(data_dir) if f.endswith('.md')]
+            file_list = [f for f in os.listdir(self.data_dir) if f.endswith('.md')]
             self.wfile.write(json.dumps(file_list).encode())
         elif self.path == '/wikt_files':
             self.send_response(200)
@@ -74,142 +91,172 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         """
-        Log an arbitrary message to the log file and stdout.
+        Log an arbitrary message to the log file.
 
         Args:
             format (str): A format string for the message to be logged.
             *args: The arguments which are merged into format using the string formatting operator.
         """
-        message = f"{self.log_date_time_string()} - {self.address_string()} - {format%args}"
+        message = f"{self.address_string()} - {format%args}"
         logging.info(message)
 
-class ReuseAddressTCPServer(socketserver.TCPServer):
-    """
-    A TCPServer subclass that sets SO_REUSEADDR on the server socket.
-    
-    This allows the server to rebind to a previously used address, useful
-    for rapid restarts of the server.
-    """
 
-    def server_bind(self):
-        """
-        Bind the socket to the server address with the SO_REUSEADDR option set.
-        """
-        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self.socket.bind(self.server_address)
+class ServerManager:
+    def __init__(self, port, directory):
+        self.port = port
+        self.directory = directory
+        self.lock_file = '/tmp/http_server.lock'
 
-def run_server(port, directory):
-    """
-    Run the HTTP server with singleton pattern.
+    class ReuseAddressTCPServer(socketserver.TCPServer):
+        def server_bind(self):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.bind(self.server_address)
 
-    Args:
-        port (int): The port number to run the server on.
-        directory (str): The directory to serve files from.
-    """
-    lock_file = '/tmp/http_server.lock'
-    
-    try:
-        # Try to acquire the lock file
-        lock_fd = open(lock_file, 'w')
-        fcntl.lockf(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        
-        # Write the current process ID to the lock file
-        lock_fd.write(str(os.getpid()))
-        lock_fd.flush()
-        
-        # If we got here, we have the lock, so start the server
-        handler = lambda *args, **kwargs: MyHandler(*args, directory=directory, **kwargs)
-        
+    def run(self):
         try:
-            with ReuseAddressTCPServer(("", port), handler) as httpd:
-                logging.info(f"Serving directory '{directory}' at port {port}")
-                print(f"Server started. Serving directory '{directory}' at port {port}")
+            with open(self.lock_file, 'w') as lock_fd:
+                fcntl.lockf(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                lock_fd.write(str(os.getpid()))
+                lock_fd.flush()
+                
+                self._start_server()
+        except IOError as e:
+            if e.errno == errno.EAGAIN:
+                logging.info("Server is already running.")
+            else:
+                raise
+        finally:
+            self._cleanup()
+
+    def _start_server(self):
+        handler = lambda *args, **kwargs: MyHandler(*args, directory=self.directory, **kwargs)
+        try:
+            with self.ReuseAddressTCPServer(("", self.port), handler) as httpd:
+                self._log_server_start()
                 httpd.serve_forever()
         except OSError as e:
             if e.errno == 98:  # Address already in use
-                print(f"Error: Port {port} is already in use. Please choose a different port.")
-                logging.error(f"Port {port} is already in use.")
+                self._log_port_in_use()
             else:
                 raise
-    
-    except IOError as e:
-        if e.errno == errno.EAGAIN:
-            # The file is locked, which means the server is already running
-            print("Server is already running.")
-            logging.info("Attempted to start server, but it's already running.")
-        else:
-            # Some other error occurred
-            raise
-    finally:
-        if 'lock_fd' in locals():
-            lock_fd.close()
-            os.remove(lock_file)  # Remove the lock file when done
 
-def stop_server():
-    """
-    Stop the running server.
-    """
-    lock_file = '/tmp/http_server.lock'
-    try:
-        with open(lock_file, 'r') as f:
+    def stop(self):
+        try:
+            pid = self._get_pid_from_lock_file()
+            os.kill(pid, signal.SIGTERM)
+            os.remove(self.lock_file)
+            logging.info("Server stopped.")
+        except FileNotFoundError:
+            self._stop_by_process_name()
+        except ProcessLookupError:
+            self._handle_process_not_found()
+        except ValueError as e:
+            self._handle_invalid_lock_file(e)
+
+    def restart(self):
+        self.stop()
+        time.sleep(2)  # Wait for the server to fully stop
+        self.run()
+
+    def _get_pid_from_lock_file(self):
+        with open(self.lock_file, 'r') as f:
             content = f.read().strip()
             if not content:
                 raise ValueError("Lock file is empty")
-            pid = int(content)
-        os.kill(pid, signal.SIGTERM)
-        os.remove(lock_file)
-        print("Server stopped.")
-        logging.info("Server stopped.")
-    except FileNotFoundError:
-        print("Lock file not found. Searching for http_server.py process.")
+            return int(content)
+
+    def _stop_by_process_name(self):
         logging.info("Lock file not found. Searching for http_server.py process.")
         try:
             import psutil
             for proc in psutil.process_iter(['name', 'cmdline']):
                 if proc.info['name'] == 'python' and any('http_server.py' in arg for arg in proc.info['cmdline']):
                     os.kill(proc.pid, signal.SIGTERM)
-                    print(f"Server process (PID: {proc.pid}) stopped.")
                     logging.info(f"Server process (PID: {proc.pid}) stopped.")
                     return
-            print("No running http_server.py process found.")
             logging.info("No running http_server.py process found.")
         except ImportError:
-            print("psutil module not found. Unable to search for server process.")
             logging.error("psutil module not found. Unable to search for server process.")
-    except ProcessLookupError:
-        print("Server process not found. Removing lock file.")
-        os.remove(lock_file)
+
+    def _handle_process_not_found(self):
         logging.info("Server process not found. Lock file removed.")
-    except ValueError as e:
-        print(f"Error reading lock file: {e}")
-        logging.error(f"Error reading lock file: {e}")
-        os.remove(lock_file)
+        os.remove(self.lock_file)
+
+    def _handle_invalid_lock_file(self, error):
+        logging.error(f"Error reading lock file: {error}")
+        os.remove(self.lock_file)
         logging.info("Invalid lock file removed.")
 
-def restart_server(port, directory):
-    """
-    Restart the server.
+    def _log_server_start(self):
+        message = f"Server started. Serving directory '{self.directory}' at port {self.port}"
+        logging.info(message)
 
-    Args:
-        port (int): The port number to run the server on.
-        directory (str): The directory to serve files from.
-    """
-    stop_server()
-    time.sleep(2)  # Wait a bit longer for the server to fully stop and release the port
-    run_server(port, directory)
+    def _log_port_in_use(self):
+        message = f"Port {self.port} is already in use. Please choose a different port."
+        logging.error(message)
+
+    def _cleanup(self):
+        if os.path.exists(self.lock_file):
+            os.remove(self.lock_file)
+
+
+def arugment_parser():
+    web_root_dir = os.path.dirname(os.path.abspath(__file__))
+
+    parser = argparse.ArgumentParser(
+        description="Simple HTTP Server with custom features"
+    )
+    parser.add_argument(
+        '-p',
+        '--port',
+        type=int,
+        default=8000,
+        help="Port to run the server on"
+    )
+    parser.add_argument(
+        '-l',
+        '--log_dir',
+        type=str,
+        default=os.path.join(web_root_dir, 'logs'),
+        help="Log directory path"
+    )
+    parser.add_argument(
+        '-w',
+        '--web_dir',
+        type=str,
+        default=os.path.join(web_root_dir, 'webUI'),
+        help="WebUI directory path"
+    )
+    parser.add_argument(
+        '-s',
+        '--stop',
+        action='store_true',
+        help="Stop the running server"
+    )
+    parser.add_argument(
+        '-r',
+        '--restart',
+        action='store_true',
+        help="Restart the server"
+    )
+    return parser.parse_args()
+
 
 if __name__ == "__main__":
-    web_server_dir = os.path.dirname(os.path.abspath(__file__))
-    parser = argparse.ArgumentParser(description="Simple HTTP Server with custom features")
-    parser.add_argument('-p', '--port', type=int, default=8000, help="Port to run the server on")
-    parser.add_argument('-d', '--directory', type=str, default=os.path.join(web_server_dir, 'webUI'), help="Directory to serve")
-    parser.add_argument('-s', '--stop', action='store_true', help="Stop the running server")
-    parser.add_argument('-r', '--restart', action='store_true', help="Restart the server")
-    args = parser.parse_args()
-
+    # add argument parser
+    args = arugment_parser()
+    
+    # init logger
+    init_logger(args.log_dir)
+    logging.info(str(args))
+    
+    # init server manager
+    server = ServerManager(port=args.port, directory=args.web_dir)
+    
+    # handle stop, restart, run
     if args.stop:
-        stop_server()
+        server.stop()
     elif args.restart:
-        restart_server(args.port, args.directory)
+        server.restart()
     else:
-        run_server(args.port, args.directory)
+        server.run()
