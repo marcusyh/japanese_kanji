@@ -73,3 +73,14 @@ export function generateKanjiContent(kanji, info) {
     content += '</div>';
     return content;
 }
+
+export async function fetchWiktContent(filePath) {
+    const response = await fetch(filePath);
+    const html = await response.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    // 这里可以根据维基词典 HTML 的结构来提取所需的内容
+    // 这只是一个示例，您可能需要根据实际 HTML 结构进行调整
+    const content = doc.querySelector('body').innerHTML;
+    return content;
+}

@@ -20,6 +20,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
     and provides custom logging.
     """
 
+    wikt_files = {}  # 用于存储维基词典文件列表
+
     def __init__(self, *args, directory=None, **kwargs):
         """
         Initialize the handler with a specific directory to serve files from.
@@ -38,6 +40,16 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         logging.basicConfig(filename=self.log_filename, level=logging.INFO, 
                             format='%(levelname)s - %(message)s')
 
+        if not MyHandler.wikt_files:
+            self.load_wikt_files()
+
+    def load_wikt_files(self):
+        wikt_dir = os.path.join(self.directory, 'data', 'wikt')
+        for filename in os.listdir(wikt_dir):
+            if filename.endswith('.html'):
+                kanji = filename[:-5]  # 移除 .html 后缀
+                MyHandler.wikt_files[kanji] = os.path.join('data', 'wikt', filename)
+
     def do_GET(self):
         """
         Handle GET requests.
@@ -52,6 +64,11 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             data_dir = os.path.join(self.directory, 'data')
             file_list = [f for f in os.listdir(data_dir) if f.endswith('.md')]
             self.wfile.write(json.dumps(file_list).encode())
+        elif self.path == '/wikt_files':
+            self.send_response(200)
+            self.send_header('Content-type', 'application/json')
+            self.end_headers()
+            self.wfile.write(json.dumps(MyHandler.wikt_files).encode())
         else:
             super().do_GET()
 

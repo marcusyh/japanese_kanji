@@ -1,7 +1,7 @@
 import os
 from output import config
 from wikt_parser import parse_ja_yomi
-from output.wordslist_printer import output_wordslist
+from output.kanji.wordslist_printer import output_wordslist
 from output.ja_kunyomi import generate_kunyomi_file
 from output.ja_onyomi import generate_onyomi_file
 

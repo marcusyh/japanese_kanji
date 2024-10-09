@@ -167,16 +167,7 @@ def fix_by_preparation(wikt_onyomi_dict_all, prpr_onyomi_dict):
     Returns:
         dict: A new dictionary containing the corrected on'yomi information.
     """
-    # if no preparation data, return the original dictionary
-    if '音読み' not in prpr_onyomi_dict:
-        return wikt_onyomi_dict_all
-
-    prpr_onyomi_list = list(prpr_onyomi_dict['音読み'].keys())
-    prpr_onyomi_matched_list = []
-    new_onyomi_dict_all = {}
-    
-    # Process both '表内' and '表外' categories
-    for category in ['表内', '表外']:
+    def process_category(category, rt_value, prpr_onyomi_list, prpr_onyomi_matched_list, new_onyomi_dict_all):
         for reading_type, rt_value in wikt_onyomi_dict_all.items(): # reading_type: 呉音, 漢音, 慣用音, etc
             if category not in rt_value:
                 continue
@@ -186,8 +177,7 @@ def fix_by_preparation(wikt_onyomi_dict_all, prpr_onyomi_dict):
                 
                 # If the pronunciation is in the preparation data, add to '表内'
                 if item['pron'] in prpr_onyomi_list: # item['pron']: ホウ
-                    prpr_onyomi_matched_list.append(item['pron'])
-                    prpr_onyomi_list.remove(item['pron'])
+                    prpr_onyomi_matched_list.add(item['pron'])
                     
                     # Add to '表内' in the new dictionary
                     if reading_type not in new_onyomi_dict_all:
@@ -205,10 +195,21 @@ def fix_by_preparation(wikt_onyomi_dict_all, prpr_onyomi_dict):
                     if '表外' not in new_onyomi_dict_all[reading_type]:
                         new_onyomi_dict_all[reading_type]['表外'] = []
                     new_onyomi_dict_all[reading_type]['表外'].append(copy.deepcopy(item))
-        
-        # Break if all preparation data has been processed
-        if len(prpr_onyomi_list) == 0:
-            break
+ 
+    # if no preparation data, return the original dictionary
+    if '音読み' not in prpr_onyomi_dict:
+        return wikt_onyomi_dict_all
+
+    prpr_onyomi_list = set(prpr_onyomi_dict['音読み'].keys())
+    prpr_onyomi_matched_list = set()
+    new_onyomi_dict_all = {}
+    
+    # Process both '表内' and '表外' categories
+    process_category('表内', wikt_onyomi_dict_all, prpr_onyomi_list, prpr_onyomi_matched_list, new_onyomi_dict_all)
+    prpr_onyomi_list = prpr_onyomi_list - prpr_onyomi_matched_list
+    
+    process_category('表外', wikt_onyomi_dict_all, prpr_onyomi_list, prpr_onyomi_matched_list, new_onyomi_dict_all)
+    prpr_onyomi_list = prpr_onyomi_list - prpr_onyomi_matched_list
     
     # Add any remaining preparation data as '慣用音' (customary readings)
     for pron in prpr_onyomi_list:
