@@ -147,7 +147,7 @@ def group_kanji_by_onyomi(
             group_key = ((), (), (), ())
             sort_key = ((), ())
 
-        group_key = (go, kan, soto, kanyou)
+        #group_key = (go, kan, soto, kanyou)
         if group_key not in kanji_groups:
             kanji_groups[group_key] = [sort_key, [kanji]]
         else:

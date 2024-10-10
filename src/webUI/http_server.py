@@ -74,58 +74,58 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         """
         Handle GET requests.
-
-        If the path is '/file_list', return a JSON list of markdown files.
-        Otherwise, delegate to the parent class method.
         """
+        handlers = {
+            '/pron_list': self.handle_pron_list,
+            '/kanji_wikt': self.handle_kanji_wikt,
+            '/words_list': self.handle_words_list
+        }
+
+        for prefix, handler in handlers.items():
+            if self.path.startswith(prefix):
+                return handler()
+
+        super().do_GET()
+
+    def handle_pron_list(self):
         if self.path == '/pron_list':
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            file_list = [f.split('.')[0] for f in os.listdir(self.pron_list_dir) if f.endswith('.md')]
-            self.wfile.write(json.dumps(file_list).encode())
-        elif self.path.startswith('/pron_list/'):
+            self.send_json_response([f.split('.')[0] for f in os.listdir(self.pron_list_dir) if f.endswith('.md')])
+        else:
+            self.serve_file(self.pron_list_dir, '.md', 'text/markdown')
+
+    def handle_kanji_wikt(self):
+        if self.path == '/kanji_wikt':
+            self.send_json_response(MyHandler.wikt_files)
+        else:
+            self.serve_file(self.kanji_wikt_dir, '.html', 'text/html')
+
+    def handle_words_list(self):
+        self.serve_file(os.path.dirname(self.words_list_file), '.json', 'application/json', self.words_list_file)
+
+    def send_json_response(self, data):
+        self.send_response(200)
+        self.send_header('Content-type', 'application/json')
+        self.end_headers()
+        self.wfile.write(json.dumps(data).encode())
+
+    def serve_file(self, directory, extension, content_type, specific_file=None):
+        if specific_file:
+            file_path = specific_file
+        else:
             path_without_query = self.path.split('?')[0]
             filename = path_without_query.replace('//', '/').split('/')[-1]
-            filename = f'{urllib.parse.unquote(filename)}.md'
-            file_path = os.path.join(self.pron_list_dir, filename)
-            if os.path.exists(file_path):
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                    self.send_response(200)
-                    self.send_header('Content-type', 'text/markdown')
-                    self.end_headers()
-                    self.wfile.write(content.encode())
-            else:
-                self.send_error(404, "File not found")
-        elif self.path == '/kanji_wikt':
-            self.send_response(200)
-            self.send_header('Content-type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(MyHandler.wikt_files).encode())
-        elif self.path.startswith('/kanji_wikt/'):
-            path_without_query = self.path.split('?')[0]
-            filename = path_without_query.replace('//', '/').split('/')[-1]
-            filename = f'{urllib.parse.unquote(filename)}.html'
-            file_path = os.path.join(self.kanji_wikt_dir, filename)
-            if os.path.exists(file_path):
-                with open(file_path, 'r', encoding='utf-8') as file:
-                    content = file.read()
-                    self.send_response(200)
-                    self.send_header('Content-type', 'text/html')
-                    self.end_headers()
-                    self.wfile.write(content.encode())
-            else:
-                self.send_error(404, "File not found")
-        elif self.path.startswith('/words_list'):
-            with open(self.words_list_file, 'r', encoding='utf-8') as file:
+            filename = f'{urllib.parse.unquote(filename)}{extension}'
+            file_path = os.path.join(directory, filename)
+
+        if os.path.exists(file_path):
+            with open(file_path, 'r', encoding='utf-8') as file:
                 content = file.read()
                 self.send_response(200)
-                self.send_header('Content-type', 'application/json')
+                self.send_header('Content-type', content_type)
                 self.end_headers()
                 self.wfile.write(content.encode())
         else:
-            super().do_GET()
+            self.send_error(404, "File not found")
 
     def log_message(self, format, *args):
         """
