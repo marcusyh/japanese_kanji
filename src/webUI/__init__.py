@@ -1,7 +1,8 @@
 import os
 import shutil
 import argparse
-from output import config
+from webUI import config as webUI_config
+import config
 from file_util import prepare_file_path
    
 def boolean_arg(value):
@@ -67,21 +68,32 @@ def deploy_template(args):
             
 
 def deploy_http_server(args):
+    # delete http_server.py if exists
+    prepare_file_path(args.deploy_path, is_dir=True, delete_if_exists=False)
+
     # The path to deploy http_server.py
     http_server_deploy_path = os.path.join(args.deploy_path, 'http_server.py')
-    # delete http_server.py if exists
-    prepare_file_path(http_server_deploy_path, is_dir=False, delete_if_exists=args.remove_existing_files)
-    # copy http_server.py
     shutil.copy('webUI/http_server.py', http_server_deploy_path)
+
+    config_deploy_path = os.path.join(args.deploy_path, 'config.py')
+    shutil.copy('webUI/config.py', config_deploy_path)
     
 
 def deploy_data(args):
     # The path to deploy data
-    data_deploy_path = os.path.join(args.deploy_path, 'data')
-    # delete data dir if exists
+    data_deploy_path = os.path.join(args.deploy_path, webUI_config.DATA_ROOT_DIR)
     prepare_file_path(data_deploy_path, is_dir=True, delete_if_exists=args.remove_existing_files)
+
     # copy data
-    shutil.copytree(config.MARKDOWN_PATH, data_deploy_path, dirs_exist_ok=True)
+    dst_pron_list_path = os.path.join(args.deploy_path, webUI_config.PRON_LIST_DIR)
+    shutil.copytree(config.MARKDOWN_PATH, dst_pron_list_path, dirs_exist_ok=True)
+    
+    dst_kanji_wikt_path = os.path.join(args.deploy_path, webUI_config.KANJI_WIKT_DIR)
+    shutil.copytree(config.HTML_PATH, dst_kanji_wikt_path, dirs_exist_ok=True)
+
+    src_words_path = os.path.join(config.OUTPUT_ROOT, f'{config.WORDS_FILENAME}.json')
+    dst_words_path = os.path.join(args.deploy_path, webUI_config.WORDS_LIST_FILE)
+    shutil.copy(src_words_path, dst_words_path)
 
 
 def deploy_update_webui(args):

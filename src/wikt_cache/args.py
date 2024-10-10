@@ -1,5 +1,7 @@
 import argparse
+import config
 from wikt_cache import fetch_wikt_cache
+from wikt_cache.wiki_html import fetch_wiki_html
 
 def boolean_arg(value):
     if value.lower() in ('yes', 'true', 't', 'y', '1'):
@@ -17,6 +19,11 @@ def add_wikt_args(sub_parsers):
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     wikt_parser.add_argument(
+        '-ht', '--update_html',
+        action='store_true',
+        help='Wikitext cache will be update or fetch by default. If this argument is specified, html will be updated or fetched.'
+    )
+    wikt_parser.add_argument(
         '-u', '--update_flag',
         type=boolean_arg,
         default=False,
@@ -31,23 +38,30 @@ def add_wikt_args(sub_parsers):
     wikt_parser.add_argument(
         '-c', '--cache_path',
         type=str,
-        default='../data/wiktionary/cache.txt',
-        help='Path to the Wiktionary cache file. (default: ../data/wiktionary/cache.txt)'
+        default=config.WIKT_CACHE_FILE,
+        help=f'Path to the Wiktionary cache file. (default: {config.WIKT_CACHE_FILE})'
     )
     wikt_parser.add_argument(
         '-s', '--source_data_dir',
         type=str,
-        default='../data/preparation',
-        help='Path to the source data directory. (default: ../data/preparation)'
+        default=config.PREPARATION_DIR,
+        help=f'Path to the source data directory. (default: {config.PREPARATION_DIR})'
     )
 
 def process_wikt_wrapper(args):
-    fetch_wikt_cache(
-        source_data_dir=args.source_data_dir,
-        cache_path=args.cache_path,
-        update_flag=args.update_flag,
-        fetch_missing_only=args.fetch_missing_only
-    )
+    if not args.update_html:
+        fetch_wikt_cache(
+            source_data_dir=args.source_data_dir,
+            cache_path=args.cache_path,
+            update_flag=args.update_flag,
+            fetch_missing_only=args.fetch_missing_only
+        )
+    else:
+        fetch_wiki_html(
+            cache_path=config.WIKT_CACHE_DIR,
+            update_flag=args.update_flag,
+            fetch_missing_only=args.fetch_missing_only
+        )
 
 def regist_wiktionary(sub_parsers):
     add_wikt_args(sub_parsers)

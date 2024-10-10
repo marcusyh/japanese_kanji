@@ -1,4 +1,5 @@
 import { generateKanjiContent, mergeKanjiInfo, fetchWiktContent } from './kanjiProcessor.js';
+import { CONFIG } from './config.js';
 
 const state = {
     // Object to store Wiktionary file paths for each kanji
@@ -24,7 +25,7 @@ const config = {
 };
 
 async function loadWiktFiles() {
-    const response = await fetch('/wikt_files');
+    const response = await fetch(CONFIG.KANJI_WIKT_URL);
     state.wiktFiles = await response.json();
 }
 
@@ -59,7 +60,7 @@ async function createTooltipContent(validKanji, kanjiInfo) {
     for (const kanji of validKanji) {
         if (state.wiktFiles[kanji]) {
             try {
-                const wiktContent = await fetchWiktContent(state.wiktFiles[kanji]);
+                const wiktContent = await fetchWiktContent(`${CONFIG.KANJI_WIKT_URL}/${state.wiktFiles[kanji]}`);
                 if (wiktContent && wiktContent.trim() !== '') {
                     content += `
                         <div class="wikt-content-wrapper">
@@ -89,7 +90,7 @@ function handleWiktButtonClick(e) {
         e.target.textContent = 'hide wikt';
         if (!content.dataset.loaded) {
             const kanji = e.target.dataset.kanji;
-            fetchWiktContent(state.wiktFiles[kanji]).then(wiktContent => {
+            fetchWiktContent(`${CONFIG.KANJI_WIKT_URL}/${state.wiktFiles[kanji]}`).then(wiktContent => {
                 content.innerHTML = wiktContent;
                 content.dataset.loaded = 'true';
             }).catch(error => {

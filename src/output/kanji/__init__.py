@@ -1,10 +1,11 @@
 import argparse
 import os
-from output import config
+import config
 from wikt_parser import parse_ja_yomi
 from output.kanji.wordslist_printer import output_wordslist
-from output.kanji.wikt import convert_wikt_to_html
+from output.kanji.wiktionary import convert_wikt_to_html
 
+wordslist_path = os.path.join(config.OUTPUT_ROOT, f'{config.WORDS_FILENAME}.json')
 
 def add_wordslist_args(sub_parsers):
     wordslist_parser = sub_parsers.add_parser(
@@ -20,12 +21,6 @@ def add_wordslist_args(sub_parsers):
         help='Path to the wiki cache. (default: ../data/wiktionary)'
     )
     wordslist_parser.add_argument(
-        '-o', '--output_path',
-        type=str,
-        default=config.MARKDOWN_PATH,
-        help=f'Dir to the output file containing wordslist data. If not specified, defaults to {config.MARKDOWN_PATH}.'
-    )
-    wordslist_parser.add_argument(
         '-w',
         '--wordslist',
         action='store_true',
@@ -36,6 +31,18 @@ def add_wordslist_args(sub_parsers):
         '--wiktionary',
         action='store_true',
         help='Generate kanji detail by wiktionary in html format',
+    )
+    wordslist_parser.add_argument(
+        '-ow', '--wordslist_output_path',
+        type=str,
+        default=wordslist_path,
+        help=f'Dir to the wordslist output file. If not specified, defaults to {wordslist_path}.'
+    )
+    wordslist_parser.add_argument(
+        '-ok', '--html_output_path',
+        type=str,
+        default=config.HTML_PATH,
+        help=f'Dir to the wiktionary output file. If not specified, defaults to {config.HTML_PATH}.'
     )
 
     
@@ -51,13 +58,12 @@ def genereate_kanji_detail(args):
         kanji_yomi_dict, kanji_ydkey_map, all_kunyomi_keys = parse_ja_yomi(args.input_wiki_cache_dir)
 
         # output wordslist
-        output_json_path = os.path.join(args.output_path, '日本語_単語.json')
-        output_wordslist(output_json_path, kanji_yomi_dict, kanji_ydkey_map)
+        output_wordslist(wordslist_path, kanji_yomi_dict, kanji_ydkey_map)
     
     # generate wiktionary detail
     if args.wiktionary:
-        output_dir = os.path.join(args.output_path, 'wikt')
-        convert_wikt_to_html(args.input_wiki_cache_dir, output_dir)
+        html_src_dir = os.path.join(args.input_wiki_cache_dir, 'html')
+        convert_wikt_to_html(html_src_dir, args.html_output_path)
 
 def regist_kanji_detail(sub_parsers):
     add_wordslist_args(sub_parsers)

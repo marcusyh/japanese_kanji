@@ -1,6 +1,6 @@
 import argparse
 import os
-from output import config
+import config
 from output.ja_kunyomi import output_ja_kunyomi
 
 markdown_file_path = os.path.join(config.MARKDOWN_PATH, f'{config.KUNYOMI_FILENAME}.md')

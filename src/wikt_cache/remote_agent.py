@@ -40,7 +40,7 @@ class Agent():
             return []
 
 
-    def fetch(self, kanji):
+    def fetch(self, kanji, prop='wikitext'):
         """
         Fetches the text related to specified sections from the Japanese Wiktionary page for a given kanji character.
 
@@ -85,12 +85,12 @@ class Agent():
                     continue
                 
                 # update fields to prepare the query
-                fields.update({'prop': 'wikitext', 'section': keywords_index})
+                fields.update({'prop': prop, 'section': keywords_index})
 
                 # fetch the pronunciation of the kanji
                 try:
                     hdlr = self.__http.request('GET', self._url %lang, fields=fields)
-                    wikitext = json.loads(hdlr.data.decode('utf-8'))['parse']['wikitext']['*']
+                    wikitext = json.loads(hdlr.data.decode('utf-8'))['parse'][prop]['*']
                     text_list.append(wikitext)
                 except Exception:
                     traceback.print_exc()

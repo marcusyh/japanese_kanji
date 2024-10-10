@@ -1,5 +1,5 @@
 import os
-from output import config
+import config
 from wikt_parser import parse_ja_yomi
 from output.formater import generate_yomi_rows
 from output.yomi_printer import output_yomi_info

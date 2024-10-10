@@ -1,6 +1,6 @@
 import argparse
 import os
-from output import config
+import config
 from output.ja_onyomi import output_ja_onyomi
 
 def add_onyomi_args(sub_parsers):
@@ -50,7 +50,12 @@ def add_onyomi_args(sub_parsers):
         help='show all duplicate entries by all pronunciations. By default, output only one entry for each group.'
     )
 
+def output_ja_onyomi_wrapper(args):
+    if args.output_format == 'csv' and args.output_dir == config.MARKDOWN_PATH:
+        args.output_dir = config.CSV_PATH
+    output_ja_onyomi(args)
+
 
 def regist_ja_onyomi(sub_parsers):
     add_onyomi_args(sub_parsers)
-    return {'onyomi': output_ja_onyomi}
+    return {'onyomi': output_ja_onyomi_wrapper}

@@ -6,12 +6,14 @@ import os
 import socketserver
 import json
 import argparse
-import sys
+import urllib.parse
 import time
 import socket
 import fcntl
 import errno
 import signal
+import config
+
 
 def init_logger(log_directory):
     if not os.path.exists(log_directory):
@@ -54,19 +56,20 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             directory (str): The directory to serve files from.
             **kwargs: Arbitrary keyword arguments.
         """
+        self.kanji_wikt_dir = os.path.join(directory, config.KANJI_WIKT_DIR)
+        self.pron_list_dir = os.path.join(directory, config.PRON_LIST_DIR)
+        self.words_list_file = os.path.join(directory, config.WORDS_LIST_FILE)
+
         super().__init__(*args, directory=directory, **kwargs)
         
-        self.wikt_dir = os.path.join(self.directory, 'data', 'wikt')
-        self.data_dir = os.path.join(self.directory, 'data')
-
         if not MyHandler.wikt_files:
             self.load_wikt_files()
 
     def load_wikt_files(self):
-        for filename in os.listdir(self.wikt_dir):
+        for filename in os.listdir(self.kanji_wikt_dir):
             if filename.endswith('.html'):
                 kanji = filename[:-5]  # 移除 .html 后缀
-                MyHandler.wikt_files[kanji] = os.path.join('data', 'wikt', filename)
+                MyHandler.wikt_files[kanji] = kanji 
 
     def do_GET(self):
         """
@@ -75,17 +78,52 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         If the path is '/file_list', return a JSON list of markdown files.
         Otherwise, delegate to the parent class method.
         """
-        if self.path == '/file_list':
+        if self.path == '/pron_list':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
-            file_list = [f for f in os.listdir(self.data_dir) if f.endswith('.md')]
+            file_list = [f.split('.')[0] for f in os.listdir(self.pron_list_dir) if f.endswith('.md')]
             self.wfile.write(json.dumps(file_list).encode())
-        elif self.path == '/wikt_files':
+        elif self.path.startswith('/pron_list/'):
+            path_without_query = self.path.split('?')[0]
+            filename = path_without_query.replace('//', '/').split('/')[-1]
+            filename = f'{urllib.parse.unquote(filename)}.md'
+            file_path = os.path.join(self.pron_list_dir, filename)
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/markdown')
+                    self.end_headers()
+                    self.wfile.write(content.encode())
+            else:
+                self.send_error(404, "File not found")
+        elif self.path == '/kanji_wikt':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
             self.wfile.write(json.dumps(MyHandler.wikt_files).encode())
+        elif self.path.startswith('/kanji_wikt/'):
+            path_without_query = self.path.split('?')[0]
+            filename = path_without_query.replace('//', '/').split('/')[-1]
+            filename = f'{urllib.parse.unquote(filename)}.html'
+            file_path = os.path.join(self.kanji_wikt_dir, filename)
+            if os.path.exists(file_path):
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                    self.send_response(200)
+                    self.send_header('Content-type', 'text/html')
+                    self.end_headers()
+                    self.wfile.write(content.encode())
+            else:
+                self.send_error(404, "File not found")
+        elif self.path.startswith('/words_list'):
+            with open(self.words_list_file, 'r', encoding='utf-8') as file:
+                content = file.read()
+                self.send_response(200)
+                self.send_header('Content-type', 'application/json')
+                self.end_headers()
+                self.wfile.write(content.encode())
         else:
             super().do_GET()
 
@@ -105,7 +143,7 @@ class ServerManager:
     def __init__(self, port, directory):
         self.port = port
         self.directory = directory
-        self.lock_file = '/tmp/http_server.lock'
+        self.lock_file = config.LOCK_FILE
 
     class ReuseAddressTCPServer(socketserver.TCPServer):
         def server_bind(self):

@@ -1,6 +1,6 @@
 import argparse
 import os
-from output import config
+import config
 from output.ja_all import output_ja_all
 
 def add_all_args(sub_parsers):
