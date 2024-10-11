@@ -125,6 +125,9 @@ def group_kanji_by_onyomi(
     for kanji, info in kanji_data.items():
         if not info:
             continue
+        
+        if info.get("has_hyonai_kunyomi", False):
+            kanji = f'{kanji}◦'
 
         # Get sorting keys for the current kanji
         go, kan, soto, kanyou = get_sorting_keys(info, merge_hyogai, reading_types_order)
@@ -134,22 +137,27 @@ def group_kanji_by_onyomi(
         if go:
             group_key = (go, kan, (), ())
             sort_key = (go, kan)
+            group_key_meta_list = ['呉音', '漢音']
         elif kan:
             group_key = ((), kan, (), ())
             sort_key = (kan, ())
+            group_key_meta_list = ['漢音']
         elif soto:
             group_key = ((), (), soto, ())
             sort_key = (soto,())
+            group_key_meta_list = ['慣用音']
         elif kanyou:
             group_key = ((), (), (), kanyou)
             sort_key = (kanyou, ())
+            group_key_meta_list = ['宋唐音']
         else:
             group_key = ((), (), (), ())
             sort_key = ((), ())
 
-        #group_key = (go, kan, soto, kanyou)
+        group_key = (go, kan, soto, kanyou)
+        group_key_meta_list = ["呉音", "漢音", "慣用音", "宋唐音"]
         if group_key not in kanji_groups:
-            kanji_groups[group_key] = [sort_key, [kanji]]
+            kanji_groups[group_key] = [sort_key, [kanji], group_key_meta_list]
         else:
             kanji_groups[group_key][1].append(kanji)
     
@@ -192,7 +200,7 @@ def group_kanji_by_kunyomi(
         group_key = get_sorting_keys(info, merge_hyogai, ['訓読み'])
         # Group kanji by their kun'yomi readings
         if group_key not in kanji_groups:
-            kanji_groups[group_key] = [group_key, [kanji]]
+            kanji_groups[group_key] = [group_key, [kanji], ['訓読み']]
         else:
             kanji_groups[group_key][1].append(kanji)
     
@@ -203,6 +211,7 @@ def group_kanji_by_kunyomi(
 def merge_kanji_info(
         kanji_list: List[str], 
         info: Dict[str, Any], 
+        group_key_meta_list: List[str],
         merge_hyogai: bool = False,
         show_hyogai: bool = False
     ) -> Tuple[Dict[str, List[str]], Set[str]]:
@@ -290,7 +299,10 @@ def merge_kanji_info(
     # The follwoing section of code, the 5 level nested for-loop, is to 
     # merge the kanji together inside a group which has the same group_key.
     for kanji in kanji_list:
+        kanji = kanji.replace('◦', '')
         for reading_type, v in info[kanji].items():
+            if reading_type == "has_hyonai_kunyomi":
+                continue
             for category, items in v.items():
                 for item in items:
                     for pron, yomi in item.items():
@@ -300,16 +312,16 @@ def merge_kanji_info(
 
     # The follwoing section of code is to add kanji as a suffix for readings if: 
     # 1) it's not old reading
-    # 2) it's not already in the group_key_list
+    # 2) it's not already in the group_key_meta_list
     # 3) it's not a single kanji
     # The result looks like: アイウ(亜、哀、愛、挨、姶、逢、葵).
     # This special process is just happends at the else branch of the if-else statement.
     # The if branch is just dealing the normal conditions.
-    group_key_list = ['呉音', '漢音', '訓読み']
+    #group_key_list = ['呉音', '漢音', '訓読み']
     for reading_type, item in merged.items():
         if reading_type == '漢字':
             continue
-        if reading_type.endswith('_old') or reading_type in group_key_list or len(merged['漢字']) == 1:
+        if reading_type.endswith('_old') or reading_type in group_key_meta_list or len(merged['漢字']) == 1:
             merged[reading_type] = list(sorted(item.keys()))
         else:
             sorted_yomis = list(sorted(item.items(), key=lambda x: x[0]))
@@ -366,9 +378,9 @@ def merge_onyomi_groups(
     """ 
     merged_groups = {}
     for group_key, group_value in kanji_groups.items():
-        sort_key, kanji_list = group_value
+        sort_key, kanji_list, group_key_meta_list = group_value
         # Merge information for all kanji in the current group
-        merged, all_prons = merge_kanji_info(kanji_list, info, merge_hyogai, show_hyogai)
+        merged, all_prons = merge_kanji_info(kanji_list, info, group_key_meta_list, merge_hyogai, show_hyogai)
         # Store the merged information under the original group key
         merged_groups[group_key] = [sort_key, all_prons, merged]
         

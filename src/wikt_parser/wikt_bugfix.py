@@ -152,7 +152,7 @@ def merge_exists_wikt_onyomi_by_prpr_itai_group(prpr_itai_kanji_list, wikt_onyom
     return merged_onyomi_dict
  
 
-def fix_by_preparation(wikt_onyomi_dict_all, prpr_onyomi_dict):
+def fix_by_preparation(wikt_onyomi_dict_all, prpr_yomi_dict):
     """
     Fix the on'yomi dictionary using preparation data as the Wiktionary data has lots of inaccurate data.
 
@@ -162,7 +162,7 @@ def fix_by_preparation(wikt_onyomi_dict_all, prpr_onyomi_dict):
 
     Args:
         wikt_onyomi_dict_all (dict): The Wiktionary on'yomi dictionary to be fixed.
-        prpr_onyomi_dict (dict): The preparation data containing accurate on'yomi information.
+        prpr_yomi_dict (dict): The preparation data containing accurate on'yomi information.
 
     Returns:
         dict: A new dictionary containing the corrected on'yomi information.
@@ -185,7 +185,7 @@ def fix_by_preparation(wikt_onyomi_dict_all, prpr_onyomi_dict):
                     if '表内' not in new_onyomi_dict_all[reading_type]:
                         new_onyomi_dict_all[reading_type]['表内'] = []
                     new_item = copy.deepcopy(item) # item: {'pron': 'ホウ', 'old_pron': 'ホウ'}
-                    new_item['words_list'] = copy.deepcopy(prpr_onyomi_dict['音読み'][item['pron']]) # item['words_list']: ['哀れ', '哀れな話', '哀れがる']
+                    new_item['words_list'] = copy.deepcopy(prpr_yomi_dict['音読み'][item['pron']]) # item['words_list']: ['哀れ', '哀れな話', '哀れがる']
                     new_onyomi_dict_all[reading_type]['表内'].append(new_item)
                 else:
                     # If the pronunciation is not in the preparation data, add to '表外'
@@ -197,12 +197,14 @@ def fix_by_preparation(wikt_onyomi_dict_all, prpr_onyomi_dict):
                     new_onyomi_dict_all[reading_type]['表外'].append(copy.deepcopy(item))
  
     # if no preparation data, return the original dictionary
-    if '音読み' not in prpr_onyomi_dict:
+    if '音読み' not in prpr_yomi_dict:
         return wikt_onyomi_dict_all
 
-    prpr_onyomi_list = set(prpr_onyomi_dict['音読み'].keys())
+    prpr_onyomi_list = set(prpr_yomi_dict['音読み'].keys())
     prpr_onyomi_matched_list = set()
-    new_onyomi_dict_all = {}
+    new_onyomi_dict_all = {
+        "has_hyonai_kunyomi": True if '訓読み' in prpr_yomi_dict and prpr_yomi_dict['訓読み'] else False
+    }
     
     # Process both '表内' and '表外' categories
     process_category('表内', wikt_onyomi_dict_all, prpr_onyomi_list, prpr_onyomi_matched_list, new_onyomi_dict_all)
@@ -219,7 +221,7 @@ def fix_by_preparation(wikt_onyomi_dict_all, prpr_onyomi_dict):
             new_onyomi_dict_all['慣用音']['表内'] = []
         new_onyomi_dict_all['慣用音']['表内'].append({
             'pron': pron,
-            "words_list": prpr_onyomi_dict['音読み'][pron]
+            "words_list": prpr_yomi_dict['音読み'][pron]
         })
     
     return new_onyomi_dict_all
@@ -281,7 +283,7 @@ def merge_with_preparation(wikt_onyomi_dict, add_mark_flag=True):
     prpr_full_kanji_map, prpr_kanji_info_dict = load_preparation_data()
     
     # Define appendix marks for different kanji types
-    appendix = {"常用": "", "表外": "+", "人名": "*", "異体": ":"} if add_mark_flag else {}
+    appendix = {"常用": "", "表外": "'", "人名": "`", "異体": ":"} if add_mark_flag else {}
     merged_kanji_dict = {}
 
     # Iterate through each primary kanji and its info in the preparation data
