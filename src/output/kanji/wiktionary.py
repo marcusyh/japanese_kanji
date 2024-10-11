@@ -2,7 +2,6 @@ import os
 import re
 import json
 from file_util import prepare_file_path
-
 def update_html_text(raw_text, language):
     # Remove HTML comments (including multi-line comments)
     html_text = re.sub(r'<!--[\s\S]*?-->', '', raw_text)
@@ -17,6 +16,12 @@ def update_html_text(raw_text, language):
     # Add target="_blank" to absolute URLs
     html_text = re.sub(r'<a\s+href="(https?://[^"]*)"', r'<a href="\1" target="_blank"', html_text)
     
+    # Remove image links, placeholders, and corresponding text
+    html_text = re.sub(r'<img[^>]*>', '', html_text)  # Remove image tags
+    html_text = re.sub(r'<span class="mw-tmh-play_button"[^>]*>.*?<\/span>', '', html_text)  # Remove media player placeholders
+    html_text = re.sub(r'<div class="thumb[^"]*".*?<\/div>', '', html_text, flags=re.DOTALL)  # Remove thumbnail divs and their contents
+    html_text = re.sub(r'<figure[^>]*>.*?<\/figure>', '', html_text, flags=re.DOTALL)  # Remove figure elements and their contents
+    
     return html_text
 
 
@@ -30,7 +35,7 @@ def update_html_file(src_path, dst_path):
         html_text += f'{ja_html}\n<br>\n'
 
     if 'zh1' in html_dict and html_dict['zh1']:
-        zh_html1 = update_html_text(html_dict['zh1'], 'zh')
+        zh_html1 = update_html_text(html_dict['zh1'], 'ja')
         html_text += f'{zh_html1}\n<br>\n'
 
     if 'zh2' in html_dict and html_dict['zh2']:

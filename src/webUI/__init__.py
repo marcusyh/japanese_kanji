@@ -1,6 +1,7 @@
 import os
 import shutil
 import argparse
+import filecmp
 from webUI import config as webUI_config
 import config
 from file_util import prepare_file_path
@@ -36,10 +37,34 @@ def add_webui_args(sub_parsers):
         help='Update yomi markdown files and words_list.json.'
     )
     webui_parser.add_argument(
+        '-do', '--update_onyomi',
+        action='store_true',
+        help='Update onyomi markdown files.'
+    )
+    webui_parser.add_argument(
+        '-dk', '--update_kunyomi',
+        action='store_true',
+        help='Update kunyomi markdown files.'
+    )
+    webui_parser.add_argument(
+        '-dw', '--update_wordslist',
+        action='store_true',
+        help='Update words_list.json.'
+    )
+    webui_parser.add_argument(
+        '-dwk', '--update_wiktionary',
+        action='store_true',
+        help='Update wiktionary html files.'
+    )
+    webui_parser.add_argument(
+        '-l', '--update_learning',
+        action='store_true',
+        help='Update learning markdown files.'
+    )
+    webui_parser.add_argument(
         '-r', '--remove_existing_files',
-        type=boolean_arg,
-        default=True,
-        help='Remove existing files. (default: True)'
+        action='store_true',
+        help='Remove existing files.'
     )
     webui_parser.add_argument(
         '-p', '--deploy_path',
@@ -80,31 +105,67 @@ def deploy_http_server(args):
     
 
 def deploy_data(args):
+    update_data_all = not (args.update_onyomi or args.update_kunyomi or args.update_wordslist or args.update_wiktionary)
+    remove_existing_files = args.remove_existing_files and update_data_all
+    
     # The path to deploy data
     data_deploy_path = os.path.join(args.deploy_path, webUI_config.DATA_ROOT_DIR)
-    prepare_file_path(data_deploy_path, is_dir=True, delete_if_exists=args.remove_existing_files)
+    prepare_file_path(data_deploy_path, is_dir=True, delete_if_exists=remove_existing_files,  create_if_not_exists=True)
 
     # copy data
-    dst_pron_list_path = os.path.join(args.deploy_path, webUI_config.PRON_LIST_DIR)
-    shutil.copytree(config.MARKDOWN_PATH, dst_pron_list_path, dirs_exist_ok=True)
-    
-    dst_kanji_wikt_path = os.path.join(args.deploy_path, webUI_config.KANJI_WIKT_DIR)
-    shutil.copytree(config.HTML_PATH, dst_kanji_wikt_path, dirs_exist_ok=True)
+    if update_data_all or args.update_onyomi or args.update_kunyomi:
+        dst_pron_list_path = os.path.join(args.deploy_path, webUI_config.PRON_LIST_DIR)
+        prepare_file_path(dst_pron_list_path, is_dir=True, delete_if_exists=False, create_if_not_exists=True)
 
-    src_words_path = os.path.join(config.OUTPUT_ROOT, f'{config.WORDS_FILENAME}.json')
-    dst_words_path = os.path.join(args.deploy_path, webUI_config.WORDS_LIST_FILE)
-    shutil.copy(src_words_path, dst_words_path)
+        if args.update_onyomi or update_data_all:
+            shutil.copy(
+                os.path.join(config.MARKDOWN_PATH, f'{config.ONYOMI_FILENAME}.md'),
+                os.path.join(dst_pron_list_path, f'{config.ONYOMI_FILENAME}_原文.md')
+            )
+        if args.update_kunyomi or update_data_all:
+            shutil.copy(
+                os.path.join(config.MARKDOWN_PATH, f'{config.KUNYOMI_FILENAME}.md'),
+                os.path.join(dst_pron_list_path, f'{config.KUNYOMI_FILENAME}_原文.md')
+            )
+    
+    if update_data_all or args.update_wiktionary:
+        dst_kanji_wikt_path = os.path.join(args.deploy_path, webUI_config.KANJI_WIKT_DIR)
+        shutil.copytree(config.HTML_PATH, dst_kanji_wikt_path, dirs_exist_ok=True)
+
+    if args.update_wordslist or update_data_all:
+        src_words_path = os.path.join(config.OUTPUT_ROOT, f'{config.WORDS_FILENAME}.json')
+        dst_words_path = os.path.join(args.deploy_path, webUI_config.WORDS_LIST_FILE)
+        shutil.copy(src_words_path, dst_words_path)
+
+
+def deploy_learning(args):
+    dst_pron_list_path = os.path.join(args.deploy_path, webUI_config.PRON_LIST_DIR)
+    prepare_file_path(dst_pron_list_path, is_dir=True, delete_if_exists=False, create_if_not_exists=True)
+
+    onyomi_src = os.path.join(config.LEARNING_DIR, f'{config.ONYOMI_FILENAME}.md')
+    onyomi_dst = os.path.join(dst_pron_list_path, f'{config.ONYOMI_FILENAME}_勉強中.md')
+    if not os.path.exists(onyomi_dst) or not filecmp.cmp(onyomi_src, onyomi_dst, shallow=False):
+        shutil.copy(onyomi_src, onyomi_dst)
+
+    kunyomi_src = os.path.join(config.LEARNING_DIR, f'{config.KUNYOMI_FILENAME}.md')
+    kunyomi_dst = os.path.join(dst_pron_list_path, f'{config.KUNYOMI_FILENAME}_勉強中.md')
+    if not os.path.exists(kunyomi_dst) or not filecmp.cmp(kunyomi_src, kunyomi_dst, shallow=False):
+        shutil.copy(kunyomi_src, kunyomi_dst)
+
 
 
 def deploy_update_webui(args):
     # If no specific update flags are set, update everything
-    update_all = not (args.update_template or args.update_http_server or args.update_data)
+    update_all = not (args.update_template or args.update_http_server or args.update_data or args.update_learning)
 
     if update_all or args.update_http_server:
         deploy_http_server(args)
     
     if update_all or args.update_data:
         deploy_data(args)
+    
+    if update_all or args.update_learning:
+        deploy_learning(args)
         
     if update_all or args.update_template:
         deploy_template(args)

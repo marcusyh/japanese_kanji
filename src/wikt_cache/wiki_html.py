@@ -9,6 +9,11 @@ def _get_kanji_list(cache_dir):
     kanji_list1 = wiki_cache.wiki_dict.keys()
     kanji_list2 = wiki_cache.patch.keys()
     return list(set(kanji_list1).union(set(kanji_list2)))
+
+
+def _filter_out_existing_files(html_path, kanji_list):
+    existing_files = [f.split('.')[0] for f in os.listdir(html_path)]
+    return list(set(kanji_list) - set(existing_files))
  
 
 def _save_html(html_path, kanji, html_list):
@@ -32,10 +37,14 @@ def fetch(kanji_list, html_path):
             print(f'{count} fetched.')
 
 
-def fetch_wiki_html(cache_path, update_flag=True, fetch_missing_only=False):
+def fetch_wiki_html(cache_path, update_flag=True, fetch_missing_only=True):
     html_path = os.path.join(cache_path, 'html')
     prepare_file_path(html_path, is_dir=True, create_if_not_exists=True, delete_if_exists=False)
 
     kanji_list = _get_kanji_list(cache_path)
+
+    if fetch_missing_only:
+        kanji_list = _filter_out_existing_files(html_path, kanji_list)
+    print(f'fetching {len(kanji_list)} kanji.')
     
-    fetch(kanji_list, html_path)
+    fetch(sorted(kanji_list), html_path)

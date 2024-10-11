@@ -1,13 +1,17 @@
 export function processKanjiCell(kanjiCell, kanjiInfo) {
     //console.log("Processing kanji cell:", kanjiCell.textContent);
-    const kanji = kanjiCell.textContent.trim().split('、');
-    kanjiCell.innerHTML = kanji.map(k => `<span class="kanji" data-kanji="${k}">${k}</span>`).join('、');
+    const kanjiGroups = kanjiCell.textContent.trim().split('、');
+    kanjiCell.innerHTML = kanjiGroups.map(kanjiGroup => {
+        const kanjiList = kanjiGroup.trim().split(',');
+        return kanjiList.map(k => `<span class="kanji" data-kanji="${k}">${k}</span>`).join(',');
+    }).join('、');
     //console.log("Processed kanji cell:", kanjiCell.innerHTML);
     kanjiCell.addEventListener('mousemove', handleKanjiMouseMove);
 }
 
 export function processReadingCell(cell) {
-    const readings = cell.textContent.trim().split('、');
+    const readings = cell.textContent.trim().split(/[、,]/);
+    console.log(readings);
     cell.innerHTML = readings.map(reading => `<span class="reading">${reading}</span>`).join('、');
 }
 

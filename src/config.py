@@ -30,6 +30,12 @@ WORDS_FILENAME = '日本語_単語'
 
 
 ################################
+# learning
+################################
+LEARNING_DIR = '../data/learning'
+
+
+################################
 # webUI
 ################################
 WEBUI_DEPLOY_DIR = '/opt/japanese_kanji_yomi'

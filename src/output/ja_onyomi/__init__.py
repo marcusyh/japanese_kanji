@@ -21,7 +21,7 @@ def generate_headers(duplicate_by_all, show_old_pron, show_hyogai):
 
 def generate_onyomi_file(args, kanji_yomi_dict):
     # merge onyomi groups
-    merged_onyomi_groups = generate_yomi_rows(kanji_yomi_dict, True, False, args.show_duplicated, args.merge_hyogai, args.show_hyogai)
+    merged_onyomi_groups = generate_yomi_rows(kanji_yomi_dict, True, False, args.show_duplicated, args.merge_hyogai, args.show_hyogai_old)
     
     # Generate headers
     headers = generate_headers(args.show_duplicated, args.show_old_pron, args.show_hyogai)

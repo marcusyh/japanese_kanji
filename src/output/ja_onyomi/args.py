@@ -45,6 +45,11 @@ def add_onyomi_args(sub_parsers):
         help='Show hyougai pronunciation in the additional column for reference.'
     )
     onyomi_parser.add_argument(
+        '-go', '--show_hyogai_old',
+        action='store_true',
+        help='Merge old hyougai pronunciation to old pronunciation column. By default, old hyougai pronunciation is not included.'
+    )
+    onyomi_parser.add_argument(
         '-d', '--show_duplicated',
         action='store_true',
         help='show all duplicate entries by all pronunciations. By default, output only one entry for each group.'

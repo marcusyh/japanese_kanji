@@ -213,7 +213,7 @@ def merge_kanji_info(
         info: Dict[str, Any], 
         group_key_meta_list: List[str],
         merge_hyogai: bool = False,
-        show_hyogai: bool = False
+        show_hyogai_old: bool = False
     ) -> Tuple[Dict[str, List[str]], Set[str]]:
     """
     Merge information for a list of kanji characters.
@@ -289,7 +289,7 @@ def merge_kanji_info(
     def add_prons(category, pron, reading_type, yomi, kanji):
         if merge_hyogai:
             add_pron('表内', pron, reading_type, yomi, kanji)
-        elif show_hyogai:
+        elif show_hyogai_old:
             if pron != 'pron':
                 category = '表内'
             add_pron(category, pron, reading_type, yomi, kanji)
@@ -337,7 +337,7 @@ def merge_onyomi_groups(
         kanji_groups: Dict[str, Any],
         info: Dict[str, Any],
         merge_hyogai: bool = False,
-        show_hyogai: bool = False,
+        show_hyogai_old: bool = False,
     ) -> Dict[str, List[Union[str, Set[str], Dict[str, Any]]]]:
     """
     Merge and process information for kanji groups.
@@ -380,7 +380,7 @@ def merge_onyomi_groups(
     for group_key, group_value in kanji_groups.items():
         sort_key, kanji_list, group_key_meta_list = group_value
         # Merge information for all kanji in the current group
-        merged, all_prons = merge_kanji_info(kanji_list, info, group_key_meta_list, merge_hyogai, show_hyogai)
+        merged, all_prons = merge_kanji_info(kanji_list, info, group_key_meta_list, merge_hyogai, show_hyogai_old)
         # Store the merged information under the original group key
         merged_groups[group_key] = [sort_key, all_prons, merged]
         
@@ -454,7 +454,7 @@ def generate_yomi_rows(
         kunyomi_flag: bool = True,
         show_duplicated: bool = False,
         merge_hyogai: bool = False,
-        show_hyogai: bool = False,
+        show_hyogai_old: bool = False,
     ) -> List[Dict[str, Any]]:
     """
     This function processes the input dictionary, groups kanji, merges information for each group,
@@ -498,7 +498,7 @@ def generate_yomi_rows(
         kanji_groups = group_kanji_by_kunyomi(info, merge_hyogai)
     
     # Merge information for each group
-    merged_groups = merge_onyomi_groups(kanji_groups, info, merge_hyogai, show_hyogai)
+    merged_groups = merge_onyomi_groups(kanji_groups, info, merge_hyogai, show_hyogai_old)
     
     # Expand and sort the groups based on pronunciations and original order
     return expand_and_sort_groups(merged_groups, show_duplicated)

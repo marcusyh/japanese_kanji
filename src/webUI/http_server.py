@@ -89,7 +89,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_pron_list(self):
         if self.path == '/pron_list':
-            self.send_json_response([f.split('.')[0] for f in os.listdir(self.pron_list_dir) if f.endswith('.md')])
+            self.send_json_response(sorted([f.split('.')[0] for f in os.listdir(self.pron_list_dir) if f.endswith('.md')]))
         else:
             self.serve_file(self.pron_list_dir, '.md', 'text/markdown')
 
