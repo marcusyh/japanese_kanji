@@ -1,7 +1,6 @@
 import os
 import shutil
 import argparse
-import filecmp
 from webUI import config as webUI_config
 import config
 from file_util import prepare_file_path
@@ -55,11 +54,6 @@ def add_webui_args(sub_parsers):
         '-dwk', '--update_wiktionary',
         action='store_true',
         help='Update wiktionary html files.'
-    )
-    webui_parser.add_argument(
-        '-l', '--update_learning',
-        action='store_true',
-        help='Update learning markdown files.'
     )
     webui_parser.add_argument(
         '-r', '--remove_existing_files',
@@ -138,27 +132,9 @@ def deploy_data(args):
         shutil.copy(src_words_path, dst_words_path)
 
 
-def deploy_learning(args):
-    dst_pron_list_path = os.path.join(args.deploy_path, webUI_config.PRON_LIST_DIR)
-    prepare_file_path(dst_pron_list_path, is_dir=True, delete_if_exists=False, create_if_not_exists=True)
-
-    onyomi_src = os.path.join(config.LEARNING_DIR, f'{config.ONYOMI_FILENAME}.md')
-    onyomi_dst = os.path.join(dst_pron_list_path, f'{config.ONYOMI_FILENAME}_勉強中.md')
-    if os.path.exists(onyomi_src):
-        if not os.path.exists(onyomi_dst) or not filecmp.cmp(onyomi_src, onyomi_dst, shallow=False):
-            shutil.copy(onyomi_src, onyomi_dst)
-
-    kunyomi_src = os.path.join(config.LEARNING_DIR, f'{config.KUNYOMI_FILENAME}.md')
-    kunyomi_dst = os.path.join(dst_pron_list_path, f'{config.KUNYOMI_FILENAME}_勉強中.md')
-    if os.path.exists(kunyomi_src):
-        if not os.path.exists(kunyomi_dst) or not filecmp.cmp(kunyomi_src, kunyomi_dst, shallow=False):
-            shutil.copy(kunyomi_src, kunyomi_dst)
-
-
-
 def deploy_update_webui(args):
     # If no specific update flags are set, update everything
-    update_all = not (args.update_template or args.update_http_server or args.update_data or args.update_learning)
+    update_all = not (args.update_template or args.update_http_server or args.update_data)
 
     if update_all or args.update_http_server:
         deploy_http_server(args)
@@ -166,9 +142,6 @@ def deploy_update_webui(args):
     if update_all or args.update_data:
         deploy_data(args)
     
-    if update_all or args.update_learning:
-        deploy_learning(args)
-        
     if update_all or args.update_template:
         deploy_template(args)
    
