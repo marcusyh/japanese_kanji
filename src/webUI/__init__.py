@@ -144,13 +144,15 @@ def deploy_learning(args):
 
     onyomi_src = os.path.join(config.LEARNING_DIR, f'{config.ONYOMI_FILENAME}.md')
     onyomi_dst = os.path.join(dst_pron_list_path, f'{config.ONYOMI_FILENAME}_勉強中.md')
-    if not os.path.exists(onyomi_dst) or not filecmp.cmp(onyomi_src, onyomi_dst, shallow=False):
-        shutil.copy(onyomi_src, onyomi_dst)
+    if os.path.exists(onyomi_src):
+        if not os.path.exists(onyomi_dst) or not filecmp.cmp(onyomi_src, onyomi_dst, shallow=False):
+            shutil.copy(onyomi_src, onyomi_dst)
 
     kunyomi_src = os.path.join(config.LEARNING_DIR, f'{config.KUNYOMI_FILENAME}.md')
     kunyomi_dst = os.path.join(dst_pron_list_path, f'{config.KUNYOMI_FILENAME}_勉強中.md')
-    if not os.path.exists(kunyomi_dst) or not filecmp.cmp(kunyomi_src, kunyomi_dst, shallow=False):
-        shutil.copy(kunyomi_src, kunyomi_dst)
+    if os.path.exists(kunyomi_src):
+        if not os.path.exists(kunyomi_dst) or not filecmp.cmp(kunyomi_src, kunyomi_dst, shallow=False):
+            shutil.copy(kunyomi_src, kunyomi_dst)
 
 
 

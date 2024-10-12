@@ -1,2 +1,4 @@
 *.pyc
 __pycache__
+data/parsed_result
+data/wiktionary

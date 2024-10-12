@@ -19,7 +19,7 @@ class Agent():
     
     _ja_section_keywords = ['日本語', '中国語']   # ja.wiktionary.org
     _zh_section_parent_keywords = ['汉语', '漢語', '汉语族', '漢語族', '汉字', '漢字']   # zh.wiktionary.org
-    _zh_section_child_keywords = ["發音", "发音", "讀音", '讀法', "读音", "拼音"]
+    _zh_section_child_keywords = ["發音", "发音", "讀音", '讀法', '读法', "读音", "拼音"]
 
     def __init__(self):
         self.__http = urllib3.PoolManager()

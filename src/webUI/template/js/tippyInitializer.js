@@ -21,7 +21,7 @@ const state = {
 const config = {
     mouseLeaveDelay: 300,
     minTooltipWidth: 0.1,
-    maxTooltipWidth: 0.6
+    maxTooltipWidth: 0.8
 };
 
 async function loadWiktFiles() {
