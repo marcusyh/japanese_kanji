@@ -14,6 +14,8 @@ def generate_words_json(merged_kanji_info, kanji_ydkey_map):
         onyomi_dict = {}
         if '音読み' in merged_kanji_info[primary_key]['ja']:
             for reading_type, readings in merged_kanji_info[primary_key]['ja']['音読み'].items():
+                if reading_type == "has_hyonai_kunyomi":
+                    continue
                 if '表内' not in readings:
                     continue
                 for pron_dict in readings['表内']:
