@@ -59,18 +59,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         self.kanji_wikt_dir = os.path.join(directory, config.KANJI_WIKT_DIR)
         self.pron_list_dir = os.path.join(directory, config.PRON_LIST_DIR)
         self.words_list_file = os.path.join(directory, config.WORDS_LIST_FILE)
-
         super().__init__(*args, directory=directory, **kwargs)
         
-        if not MyHandler.wikt_files:
-            self.load_wikt_files()
-
-    def load_wikt_files(self):
-        for filename in os.listdir(self.kanji_wikt_dir):
-            if filename.endswith('.html'):
-                kanji = filename[:-5]  # 移除 .html 后缀
-                MyHandler.wikt_files[kanji] = kanji 
-
     def do_GET(self):
         """
         Handle GET requests.
@@ -95,7 +85,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
     def handle_kanji_wikt(self):
         if self.path == '/kanji_wikt':
-            self.send_json_response(MyHandler.wikt_files)
+            self.send_json_response({filename[:-5]: filename[:-5] for filename in os.listdir(self.kanji_wikt_dir) if filename.endswith('.html')})
         else:
             self.serve_file(self.kanji_wikt_dir, '.html', 'text/html')
 
