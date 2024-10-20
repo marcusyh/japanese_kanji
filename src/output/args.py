@@ -3,6 +3,7 @@ from output.ja_onyomi.args import regist_ja_onyomi
 from output.ja_kunyomi.args import regist_ja_kunyomi
 from output.kanji import regist_kanji_detail
 from output.ja_all.args import regist_ja_all
+from output.copier import regist_copier_args
 
 def regist_parser(sub_commands):
     sub_parser = sub_commands.add_parser(
@@ -19,5 +20,6 @@ def regist_parser(sub_commands):
     register.update(regist_ja_kunyomi(third_level_parser))
     register.update(regist_kanji_detail(third_level_parser))
     register.update(regist_ja_all(third_level_parser))
+    register.update(regist_copier_args(third_level_parser))
 
     return register

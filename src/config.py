@@ -39,3 +39,9 @@ LEARNING_DIR = '../data/learning'
 # webUI
 ################################
 WEBUI_DEPLOY_DIR = '/opt/japanese_kanji_yomi'
+
+
+################################
+# ja_web
+################################
+JA_WEB_DEPLOY_DIR = '../../ja_web'
