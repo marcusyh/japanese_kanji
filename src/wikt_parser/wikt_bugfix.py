@@ -283,7 +283,7 @@ def merge_with_preparation(wikt_onyomi_dict, add_mark_flag=True):
     prpr_full_kanji_map, prpr_kanji_info_dict = load_preparation_data()
     
     # Define appendix marks for different kanji types
-    appendix = {"常用": "", "表外": "'", "人名": "`", "異体": ":"} if add_mark_flag else {}
+    appendix = {"常用": "", "表外": "'", "人名": ".", "異体": ":"} if add_mark_flag else {}
     merged_kanji_dict = {}
 
     # Iterate through each primary kanji and its info in the preparation data
