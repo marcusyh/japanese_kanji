@@ -14,17 +14,18 @@ def deploy_data(args, src_config, dst_config, suffix=''):
     if update_data_all or args.update_onyomi or args.update_kunyomi:
         dst_pron_list_path = os.path.join(args.deploy_path, dst_config.PRON_LIST_DIR)
         prepare_file_path(dst_pron_list_path, is_dir=True, delete_if_exists=False, create_if_not_exists=True)
-
-        if args.update_onyomi or update_data_all:
-            shutil.copy(
-                os.path.join(src_config.MARKDOWN_PATH, f'{src_config.ONYOMI_FILENAME}.md'),
-                os.path.join(dst_pron_list_path, f'{src_config.ONYOMI_FILENAME}{suffix}.md')
-            )
-        if args.update_kunyomi or update_data_all:
-            shutil.copy(
-                os.path.join(src_config.MARKDOWN_PATH, f'{src_config.KUNYOMI_FILENAME}.md'),
-                os.path.join(dst_pron_list_path, f'{src_config.KUNYOMI_FILENAME}{suffix}.md')
-            )
+        
+        for filename in os.listdir(src_config.MARKDOWN_PATH):
+            if (args.update_onyomi or update_data_all) and filename.startswith(src_config.ONYOMI_FILENAME):
+                shutil.copy(
+                    os.path.join(src_config.MARKDOWN_PATH, filename),
+                    os.path.join(dst_pron_list_path, filename)
+                )
+            if (args.update_kunyomi or update_data_all) and filename.startswith(src_config.KUNYOMI_FILENAME):
+                shutil.copy(
+                    os.path.join(src_config.MARKDOWN_PATH, filename),
+                    os.path.join(dst_pron_list_path, filename)
+                )
     
     if update_data_all or args.update_wiktionary:
         dst_kanji_wikt_path = os.path.join(args.deploy_path, dst_config.KANJI_WIKT_DIR)

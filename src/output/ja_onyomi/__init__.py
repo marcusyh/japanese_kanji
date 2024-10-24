@@ -21,14 +21,14 @@ def generate_headers(duplicate_by_all, show_old_pron, show_hyogai):
 
 def generate_onyomi_file(args, kanji_yomi_dict):
     # merge onyomi groups
-    merged_onyomi_groups = generate_yomi_rows(kanji_yomi_dict, True, False, args.show_duplicated, args.merge_hyogai, args.show_hyogai_old)
+    merged_onyomi_groups = generate_yomi_rows(kanji_yomi_dict, True, False, args.show_duplicated, args.merge_hyogai, args.show_hyogai_old, args.group_by)
     
     # Generate headers
     headers = generate_headers(args.show_duplicated, args.show_old_pron, args.show_hyogai)
 
     # output onyomi info
     appendix = 'md' if args.output_format == 'markdown' else 'csv'
-    output_path = os.path.join(args.output_dir, f'{config.ONYOMI_FILENAME}.{appendix}')
+    output_path = os.path.join(args.output_dir, f'{config.ONYOMI_FILENAME}_{args.group_by}.{appendix}')
     output_yomi_info(
         merged_onyomi_groups, 
         filename=output_path, 

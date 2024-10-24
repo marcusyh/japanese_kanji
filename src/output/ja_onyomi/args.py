@@ -30,6 +30,13 @@ def add_onyomi_args(sub_parsers):
         help='Output format. The value must be markdown, csv. By default, output in Markdown format.'
     )
     onyomi_parser.add_argument(
+        '-by', '--group_by',
+        type=str,
+        default='all',
+        choices=['merge', 'all', 'go_kan'],
+        help='Group by.'
+    )
+    onyomi_parser.add_argument(
         '-y', '--merge_hyogai',
         action='store_true',
         help='Merge hyougai kanji to rows for group by and sort by all pronunciations. By default, hyougai pronunciations are not included.'

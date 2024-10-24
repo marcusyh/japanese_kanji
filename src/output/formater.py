@@ -92,6 +92,7 @@ def sort_kanji(kanji_data: Dict[str, Any], merge_hyogai: bool = False) -> List[s
 def group_kanji_by_onyomi(
         kanji_data: Dict[str, Any],
         merge_hyogai: bool = False,
+        group_by:str = 'all',
     ) -> Dict[Tuple[Tuple[str, ...], ...], List[str]]:
     """
     Sort and merge kanji based on their reading information.
@@ -118,6 +119,42 @@ def group_kanji_by_onyomi(
             ...
         }
     """
+    def group_by_merge(go, kan, soto, kanyou):
+        merged_key = set([k for k in [go, kan, soto, kanyou] if k])
+        if len(merged_key) == 1:
+            group_key = (merged_key.pop(), (), (), (), ())
+            group_key_meta_list = ["呉音", "漢音", "慣用音", "宋唐音"]
+            onyomi_merge_flag = True
+        else:
+            group_key, group_key_meta_list = None, None
+            onyomi_merge_flag = False
+        return group_key, group_key_meta_list, onyomi_merge_flag
+
+    def group_by_go_kan(go, kan, soto, kanyou):
+        # Determine the grouping key based on available readings
+        # Priority: 呉音/漢音 > 慣用音 > 宋唐音
+        if go:
+            group_key = (go, kan, (), ())
+            group_key_meta_list = ['呉音', '漢音']
+        elif kan:
+            group_key = ((), kan, (), ())
+            group_key_meta_list = ['漢音']
+        elif soto:
+            group_key = ((), (), soto, ())
+            group_key_meta_list = ['慣用音']
+        elif kanyou:
+            group_key = ((), (), (), kanyou)
+            group_key_meta_list = ['宋唐音']
+        else:
+            group_key = ((), (), (), ())
+            group_key_meta_list = []
+        return group_key, group_key_meta_list, False
+
+    def group_by_all(go, kan, soto, kanyou):
+        group_key = (go, kan, soto, kanyou)
+        group_key_meta_list = ["呉音", "漢音", "慣用音", "宋唐音"]
+        return group_key, group_key_meta_list, False
+
     kanji_groups = defaultdict(list)
     
     reading_types_order = ['呉音', '漢音', '宋唐音', '慣用音']
@@ -132,32 +169,28 @@ def group_kanji_by_onyomi(
         # Get sorting keys for the current kanji
         go, kan, soto, kanyou = get_sorting_keys(info, merge_hyogai, reading_types_order)
         
-        # Determine the grouping key based on available readings
-        # Priority: 呉音/漢音 > 慣用音 > 宋唐音
-        if go:
-            group_key = (go, kan, (), ())
-            sort_key = (go, kan)
-            group_key_meta_list = ['呉音', '漢音']
-        elif kan:
-            group_key = ((), kan, (), ())
-            sort_key = (kan, ())
-            group_key_meta_list = ['漢音']
-        elif soto:
-            group_key = ((), (), soto, ())
-            sort_key = (soto,())
-            group_key_meta_list = ['慣用音']
-        elif kanyou:
-            group_key = ((), (), (), kanyou)
-            sort_key = (kanyou, ())
-            group_key_meta_list = ['宋唐音']
+        if group_by == 'merge':
+            group_key, group_key_meta_list, onyomi_merge_flag = group_by_merge(go, kan, soto, kanyou)
+            if not group_key_meta_list:
+                group_key, group_key_meta_list, onyomi_merge_flag = group_by_go_kan(go, kan, soto, kanyou)
+        elif group_by == 'go_kan':
+            group_key, group_key_meta_list, onyomi_merge_flag = group_by_go_kan(go, kan, soto, kanyou)
         else:
-            group_key = ((), (), (), ())
+            group_key, group_key_meta_list, onyomi_merge_flag = group_by_all(go, kan, soto, kanyou)
+
+        if go:
+            sort_key = (go, kan)
+        elif kan:
+            sort_key = (kan, ())
+        elif soto:
+            sort_key = (soto,())
+        elif kanyou:
+            sort_key = (kanyou, ())
+        else:
             sort_key = ((), ())
 
-        group_key = (go, kan, soto, kanyou)
-        group_key_meta_list = ["呉音", "漢音", "慣用音", "宋唐音"]
         if group_key not in kanji_groups:
-            kanji_groups[group_key] = [sort_key, [kanji], group_key_meta_list]
+            kanji_groups[group_key] = [sort_key, [kanji], group_key_meta_list, onyomi_merge_flag]
         else:
             kanji_groups[group_key][1].append(kanji)
     
@@ -200,7 +233,7 @@ def group_kanji_by_kunyomi(
         group_key = get_sorting_keys(info, merge_hyogai, ['訓読み'])
         # Group kanji by their kun'yomi readings
         if group_key not in kanji_groups:
-            kanji_groups[group_key] = [group_key, [kanji], ['訓読み']]
+            kanji_groups[group_key] = [group_key, [kanji], ['訓読み'], False]
         else:
             kanji_groups[group_key][1].append(kanji)
     
@@ -213,7 +246,8 @@ def merge_kanji_info(
         info: Dict[str, Any], 
         group_key_meta_list: List[str],
         merge_hyogai: bool = False,
-        show_hyogai_old: bool = False
+        show_hyogai_old: bool = False,
+        onyomi_groupby_merge_flag: bool = False
     ) -> Tuple[Dict[str, List[str]], Set[str]]:
     """
     Merge information for a list of kanji characters.
@@ -329,7 +363,12 @@ def merge_kanji_info(
             for yomi, kanji_list in sorted_yomis:
                 new_yomis.append(f'{yomi}({"、".join(kanji_list)})')
             merged[reading_type] = new_yomis
-                        
+
+    if onyomi_groupby_merge_flag:
+        for reading_type, item in merged.items():
+            if reading_type in group_key_meta_list:
+                merged[reading_type] = "" 
+
     return merged, all_prons
 
 
@@ -378,9 +417,9 @@ def merge_onyomi_groups(
     """ 
     merged_groups = {}
     for group_key, group_value in kanji_groups.items():
-        sort_key, kanji_list, group_key_meta_list = group_value
+        sort_key, kanji_list, group_key_meta_list, onyomi_groupby_merge_flag = group_value
         # Merge information for all kanji in the current group
-        merged, all_prons = merge_kanji_info(kanji_list, info, group_key_meta_list, merge_hyogai, show_hyogai_old)
+        merged, all_prons = merge_kanji_info(kanji_list, info, group_key_meta_list, merge_hyogai, show_hyogai_old, onyomi_groupby_merge_flag)
         # Store the merged information under the original group key
         merged_groups[group_key] = [sort_key, all_prons, merged]
         
@@ -446,8 +485,6 @@ def expand_and_sort_groups(groups: Dict[Tuple[Tuple[str, ...], ...], Any], dupli
     return sorted_rows
 
         
-
-
 def generate_yomi_rows(
         kanji_yomi_dict: Dict[str, Any],
         onyomi_flag: bool = True,
@@ -455,6 +492,7 @@ def generate_yomi_rows(
         show_duplicated: bool = False,
         merge_hyogai: bool = False,
         show_hyogai_old: bool = False,
+        group_by: str = 'all',
     ) -> List[Dict[str, Any]]:
     """
     This function processes the input dictionary, groups kanji, merges information for each group,
@@ -489,7 +527,7 @@ def generate_yomi_rows(
         info = {key: value['ja']['音読み'] for key, value in kanji_yomi_dict.items()}
 
         # Group kanji into groups
-        kanji_groups = group_kanji_by_onyomi(info, merge_hyogai)
+        kanji_groups = group_kanji_by_onyomi(info, merge_hyogai, group_by)
 
     if kunyomi_flag:
         info = {}
