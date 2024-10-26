@@ -172,7 +172,7 @@ def group_kanji_by_onyomi(
         if group_by == 'merge':
             group_key, group_key_meta_list, onyomi_merge_flag = group_by_merge(go, kan, soto, kanyou)
             if not group_key_meta_list:
-                group_key, group_key_meta_list, onyomi_merge_flag = group_by_go_kan(go, kan, soto, kanyou)
+                group_key, group_key_meta_list, onyomi_merge_flag = group_by_all(go, kan, soto, kanyou)
         elif group_by == 'go_kan':
             group_key, group_key_meta_list, onyomi_merge_flag = group_by_go_kan(go, kan, soto, kanyou)
         else:
